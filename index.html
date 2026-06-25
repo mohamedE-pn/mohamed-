@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title<لعبة الاصدقاء - محمد السيد</title>
+    <style>
+        body { 
+            margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #0d1117; color: white; text-align: center; 
+            overflow: hidden; touch-action: manipulation; 
+        }
+        .dev-signature-top { 
+            position: absolute; top: 15px; left: 0; right: 0;
+            font-size: 0.9rem; color: #64748b; pointer-events: none; z-index: 100;
+        }
+        .dev-name { color: #38bdf8; font-weight: bold; }
+        .screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
+        .hidden { display: none !important; }
+        .logo { 
+            color: #f1c40f; text-shadow: 0 0 15px #f39c12, 0 0 30px #e67e22; 
+            font-size: 2.5rem; margin-bottom: 30px; font-weight: bold;
+        }
+        .menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        button { 
+            width: 300px; padding: 18px; border: none; border-radius: 15px; 
+            font-size: 1.1rem; cursor: pointer; background: #1f2937; color: white; transition: 0.3s; 
+        }
+        .btn-main { background: #e94560 !important; font-weight: bold; }
+        .btn-cpu-choice { background: #6d28d9 !important; }
+        .divider { width: 70%; height: 1px; background: rgba(255,255,255,0.1); border: none; margin: 20px auto; }
+        .game-row { display: flex; gap: 10px; }
+        .btn-small { width: 145px; font-size: 1rem; }
+        .header { 
+            position: absolute; top: 0; width: 100%; display: flex; 
+            justify-content: space-around; align-items: center; padding: 15px 0; 
+            background: rgba(0,0,0,0.8); z-index: 10; 
+        }
+        .choices button { font-size: 3rem; padding: 15px; margin: 5px; width: auto; }
+        .xo-board { display: grid; grid-template-columns: repeat(3, 90px); gap: 10px; }
+        .cell { width: 90px; height: 90px; background: #1f2937; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: bold; }
+        .tap-game { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        .tap-zone { height: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; user-select: none; }
+        #p1-tap { background: #e94560; transform: rotate(180deg); }
+        #p2-tap { background: #38bdf8; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 200; }
+        .modal { background: #1f2937; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; }
+    </style>
+</head>
+<body>
+
+    <div class="dev-signature-top">صمم بواسطة المبدع: <span class="dev-name">محمد السيد</span></div>
+
+    <div id="main-menu" class="screen">
+        <div style="font-size: 1.2rem; color: white; margin-bottom: 5px; font-weight: bold;">Mohamed Elsayed</div>
+        <h1 class="logo">🎮 لعبة الأصدقاء</h1>
+        <div class="menu-buttons">
+            <button class="btn-main" onclick="startGame('tournament', false)">🏆 نظام البطولة (3 ألعاب)</button>
+            <button class="btn-cpu-choice" onclick="startGame('tournament', true)">🤖 بطولة ضد (كمبيوتر ذكي)</button>
+            <hr class="divider">
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 1)">🪨 حجرة ورقة</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 1)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 2)">❌ اكس او (XO)</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 2)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 3)">⚡ تحدي الضغط</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 3)">🤖 ضد آلي</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div class="header">
+            <button onclick="location.reload()" style="background:none; width:auto; font-size:1.2rem;">🏠 الرئيسية</button>
+            <div class="score">P1: <span id="s1">0</span> | <span id="p2-name">P2</span>: <span id="s2">0</span></div>
+            <div id="round-info">جولة 1 / 3</div>
+        </div>
+        <div id="game1" class="game-area hidden">
+            <p id="rps-status">اختر حركتك 🤫</p>
+            <div class="choices">
+                <button onclick="playG1('حجرة')">🪨</button>
+                <button onclick="playG1('ورقة')">📄</button>
+                <button onclick="playG1('مقص')">✂️</button>
+            </div>
+        </div>
+        <div id="game2" class="game-area hidden">
+            <div class="xo-board">
+                <div class="cell" onclick="handleXOClick(0)"></div><div class="cell" onclick="handleXOClick(1)"></div><div class="cell" onclick="handleXOClick(2)"></div>
+                <div class="cell" onclick="handleXOClick(3)"></div><div class="cell" onclick="handleXOClick(4)"></div><div class="cell" onclick="handleXOClick(5)"></div>
+                <div class="cell" onclick="handleXOClick(6)"></div><div class="cell" onclick="handleXOClick(7)"></div><div class="cell" onclick="handleXOClick(8)"></div>
+            </div>
+        </div>
+        <div id="game3" class="game-area hidden">
+            <div class="tap-game">
+                <div id="p1-tap" class="tap-zone" onclick="tap(1)"><span>اضغط!</span></div>
+                <div id="p2-tap" class="tap-zone" onclick="tap(2)"><span>اضغط!</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay" class="hidden">
+        <div class="modal">
+            <h2 id="winner-msg"></h2>
+            <button onclick="handleNext()" style="background:#22c55e; width:auto; padding:10px 40px; color:white;">متابعة ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        let mode = "", currentGame = 1, subRound = 1, s1 = 0, s2 = 0;
+        let isCPUMode = false, currentPlayer = 1, p1Choice = "", isXTurn = true, tapHeight = 50;
+        let xoBoard = Array(9).fill("");
+        let cpuTapInterval = null;
+
+        function startGame(m, cpu, gId = 1) {
+            mode = m; isCPUMode = cpu; currentGame = gId;
+            document.getElementById('p2-name').innerText = cpu ? "🤖" : "P2";
+            initGame();
+        }
+
+        function initGame() {
+            s1 = 0; s2 = 0; subRound = 1;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            showGameArea();
+        }
+
+        function showGameArea() {
+            document.querySelectorAll('.game-area').forEach(g => g.classList.add('hidden'));
+            document.getElementById(`game${currentGame}`).classList.remove('hidden');
+            if (currentGame === 2) resetXO();
+            if (currentGame === 3) resetTap();
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('s1').innerText = s1;
+            document.getElementById('s2').innerText = s2;
+            document.getElementById('round-info').innerText = `جولة ${subRound} / 3`;
+        }
+
+        // --- ذكاء حجرة ورقة مقص ---
+        function playG1(move) {
+            const status = document.getElementById('rps-status');
+            if (currentPlayer === 1) {
+                p1Choice = move;
+                if (isCPUMode) {
+                    const options = ['حجرة', 'ورقة', 'مقص'];
+                    // ذكاء: الكمبيوتر يختار حركة تهزمك بنسبة 40% من الوقت عمداً
+                    let cpuMove;
+                    const rand = Math.random();
+                    if (rand < 0.4) {
+                        cpuMove = move === 'حجرة' ? 'ورقة' : (move === 'ورقة' ? 'مقص' : 'حجرة');
+                    } else {
+                        cpuMove = options[Math.floor(Math.random() * 3)];
+                    }
+                    status.innerText = `أنت: ${p1Choice} | 🤖: ${cpuMove}`;
+                    if (p1Choice !== cpuMove) {
+                        const win = (p1Choice == 'حجرة' && cpuMove == 'مقص') || (p1Choice == 'ورقة' && cpuMove == 'حجرة') || (p1Choice == 'مقص' && cpuMove == 'ورقة');
+                        win ? s1++ : s2++;
+                    }
+                    setTimeout(checkRound, 1000);
+                } else {
+                    currentPlayer = 2; status.innerText = "دور اللاعب 2 👀";
+                }
+            } else {
+                if (p1Choice !== move) {
+                    const win = (p1Choice == 'حجرة' && move == 'مقص') || (p1Choice == 'ورقة' && move == 'حجرة') || (p1Choice == 'مقص' && move == 'ورقة');
+                    win ? s1++ : s2++;
+                }
+                p1Choice = ""; currentPlayer = 1; status.innerText = "دور اللاعب 1 🤫";
+                checkRound();
+            }
+        }
+
+        // --- ذكاء XO الخارق ---
+        function handleXOClick(idx) {
+            if (xoBoard[idx] !== "" || (isCPUMode && !isXTurn)) return;
+            makeMove(idx);
+            if (isCPUMode && !checkWin(xoBoard) && xoBoard.includes("")) {
+                setTimeout(cpuSmartXO, 600);
+            }
+        }
+
+        function cpuSmartXO() {
+            let move = findBestMove("O") || findBestMove("X"); // افوز أو امنع الخصم
+            if (move === null && xoBoard[4] === "") move = 4; // خذ المركز
+            if (move === null) {
+                let empties = xoBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+                move = empties[Math.floor(Math.random() * empties.length)];
+            }
+            if (move !== null) makeMove(move);
+        }
+
+        function findBestMove(p) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let c of wins) {
+                let cnt = 0, e = -1;
+                c.forEach(i => { if(xoBoard[i]===p) cnt++; else if(xoBoard[i]==="") e=i; });
+                if (cnt === 2 && e !== -1) return e;
+            }
+            return null;
+        }
+
+        function makeMove(idx) {
+            xoBoard[idx] = isXTurn ? "X" : "O";
+            renderXO();
+            if (checkWin(xoBoard)) {
+                isXTurn ? s1++ : s2++;
+                setTimeout(checkRound, 500);
+            } else if (!xoBoard.includes("")) {
+                setTimeout(checkRound, 500);
+            } else {
+                isXTurn = !isXTurn;
+            }
+        }
+
+        function renderXO() {
+            const cells = document.querySelectorAll('.cell');
+            xoBoard.forEach((v, i) => { 
+                cells[i].innerText = v; 
+                cells[i].style.color = v === "X" ? "#e94560" : "#38bdf8"; 
+            });
+        }
+
+        function checkWin(b) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(p => b[p[0]] !== "" && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]);
+        }
+
+        function resetXO() { xoBoard = Array(9).fill(""); isXTurn = true; renderXO(); }
+
+        // --- ذكاء تحدي الضغط ---
+        function tap(p) {
+            if (p === 2 && isCPUMode) return;
+            tapHeight = (p === 1) ? tapHeight + 4 : tapHeight - 4;
+            updateTapUI();
+            if (isCPUMode && !cpuTapInterval) {
+                cpuTapInterval = setInterval(() => {
+                    // سرعة الكمبيوتر تزيد كلما اقتربت أنت من النهاية!
+                    let speed = tapHeight > 70 ? 2.5 : 1.8;
+                    tapHeight -= speed;
+                    updateTapUI();
+                    if (tapHeight <= 5) { s2++; endTap(); checkRound(); }
+                }, 80);
+            }
+            if (tapHeight >= 95) { s1++; endTap(); checkRound(); }
+            else if (tapHeight <= 5 && !isCPUMode) { s2++; endTap(); checkRound(); }
+        }
+
+        function updateTapUI() {
+            document.getElementById('p1-tap').style.height = tapHeight + "%";
+            document.getElementById('p2-tap').style.height = (100 - tapHeight) + "%";
+        }
+        function endTap() { clearInterval(cpuTapInterval); cpuTapInterval = null; }
+        function resetTap() { tapHeight = 50; updateTapUI(); endTap(); }
+
+        function checkRound() {
+            updateUI();
+            if (s1 === 2 || s2 === 2 || subRound === 3) {
+                let msg = s1 > s2 ? "فاز اللاعب 1! 🏆" : s1 < s2 ? (isCPUMode ? "فاز الكمبيوتر! 🤖" : "فاز اللاعب 2! 🏆") : "تعادل! 🤝";
+                document.getElementById('winner-msg').innerText = msg;
+                document.getElementById('overlay').classList.remove('hidden');
+            } else {
+                subRound++;
+                if (currentGame === 1) document.getElementById('rps-status').innerText = "اختر حركتك 🤫";
+                if (currentGame === 2) resetXO();
+                updateUI();
+            }
+        }
+
+        function handleNext() {
+            document.getElementById('overlay').classList.add('hidden');
+            if (mode === "tournament" && currentGame < 3) {
+                currentGame++; s1 = 0; s2 = 0; subRound = 1; showGameArea();
+            } else { location.reload(); }
+        }
+    </script>
+</body>
+</html>

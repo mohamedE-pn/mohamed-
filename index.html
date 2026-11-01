@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة الاصدقاء - محمد السيد</title>
+    <style>
+        body { 
+            margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #0d1117; color: white; text-align: center; 
+            overflow: hidden; touch-action: manipulation; 
+        }
+        .screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; overflow-y: auto; box-sizing: border-box; }
+        .hidden { display: none !important; }
+        
+        /* تنسيق التوقيع الجديد ليظهر بشكل متناسق أسفل الزر */
+        .dev-signature-menu { 
+            font-size: 1rem; color: #64748b; margin-top: 10px; margin-bottom: 5px; pointer-events: none;
+        }
+        .dev-name { color: #48bdf9; font-weight: bold; }
+
+        .logo { 
+            color: #f1c40f; text-shadow: 0 0 15px #f39c12, 0 0 30px #e67e22; 
+            font-size: 2.5rem; margin-bottom: 20px; font-weight: bold;
+        }
+        .menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 30px; }
+        button { 
+            width: 300px; padding: 15px; border: none; border-radius: 15px; 
+            font-size: 1.1rem; cursor: pointer; background: #1f2937; color: white; transition: 0.3s; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        button:active { transform: scale(0.98); }
+        .btn-main { background: #e94560 !important; font-weight: bold; }
+        .btn-cpu-choice { background: #6d28d9 !important; }
+        .divider { width: 70%; height: 1px; background: rgba(255,255,255,0.1); border: none; margin: 15px auto; }
+        .game-row { display: flex; gap: 10px; }
+        .btn-small { width: 145px; font-size: 1rem; }
+        .header { 
+            position: absolute; top: 0; width: 100%; display: flex; 
+            justify-content: space-around; align-items: center; padding: 15px 0; 
+            background: rgba(0,0,0,0.8); z-index: 10; 
+        }
+        .choices button { font-size: 3rem; padding: 15px; margin: 5px; width: auto; }
+        .xo-board { display: grid; grid-template-columns: repeat(3, 90px); gap: 10px; }
+        .cell { width: 90px; height: 90px; background: #1f2937; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: bold; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), 0 4px 5px rgba(255,255,255,0.05); }
+        .tap-game { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        .tap-zone { height: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; user-select: none; transition: height 0.1s ease-out; }
+        #p1-tap { background: linear-gradient(180deg, #ff6b8b, #e94560); transform: rotate(180deg); box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3); }
+        #p2-tap { background: linear-gradient(180deg, #7dd3fc, #38bdf8); box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3); }
+        
+        #snakeCanvas { 
+            background: #141b26; 
+            border: 2px solid #374151; 
+            border-radius: 10px; 
+            width: 98vw;
+            max-width: 700px; 
+            max-height: 52vh; 
+            aspect-ratio: 1 / 1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            margin: 5px 0;
+        }
+
+        #pongCanvas {
+            background: #141b26; border: 4px solid #374151; border-radius: 15px; 
+            max-width: 95vw; max-height: 42vh; 
+        }
+        
+        .control-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; max-width: 700px; }
+        
+        .ctrl-row-layout { display: flex; gap: 15px; justify-content: center; width: 100%; padding: 2px 0; }
+        
+        /* رفع أزرار التحكم الزرقاء الخاصة بالبينج بونج أعلى قليلاً */
+        #p2-pong-ctrl { margin-bottom: 25px; }
+
+        .btn-dir { width: 75px; height: 50px; font-size: 1.3rem; border-radius: 12px; border: none; color: white; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
+        .btn-dir:active { transform: translateY(4px); box-shadow: none; }
+
+        .dpad-container {
+            position: relative; width: 120px; height: 120px; background: #1f2937;
+            border-radius: 50%; box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .dpad-btn {
+            position: absolute; width: 40px; height: 40px; border: none; color: white;
+            font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); padding: 0;
+        }
+        .dpad-btn:active { background: #4b5563 !important; }
+        .dpad-up { top: 4px; left: 40px; }
+        .dpad-down { bottom: 4px; left: 40px; }
+        .dpad-left { left: 4px; top: 40px; }
+        .dpad-right { right: 4px; top: 40px; }
+        .dpad-center { width: 30px; height: 30px; background: #111827; border-radius: 50%; z-index: 2; }
+
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 200; }
+        .modal { background: #1f2937; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; box-shadow: 0 0 25px #f39c12; }
+        
+        .snake-floating-ui {
+            position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between;
+            padding: 0 15px; box-sizing: border-box; z-index: 50; pointer-events: none;
+        }
+        .btn-home-snake { 
+            background: rgba(31, 41, 55, 0.8); color: white; border: 1px solid #4b5563; 
+            padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; pointer-events: auto; width: auto; box-shadow: none;
+        }
+        #snake-timer { 
+            background: rgba(0, 0, 0, 0.6); padding: 5px 10px; border-radius: 8px; 
+            font-size: 1rem; color: #f1c40f; font-weight: bold; pointer-events: none;
+        }
+    
+        .dpad-btn, .btn-dir, .tap-zone, .dpad-container, .ctrl-row-layout {
+            touch-action: none; -webkit-user-select: none; user-select: none;
+            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+        }
+
+        /* القائمة الرئيسية: تسمح بالتمرير بدون قص الأعلى */
+        #main-menu { justify-content: flex-start; }
+        #main-menu .logo { margin-top: auto; }
+        #main-menu .menu-buttons { margin-bottom: auto; }
+
+        /* لعبة الذاكرة */
+        #mem-status { font-size: 1.05rem; margin: 5px 0 10px; color: #f1c40f; font-weight: bold; }
+        .mem-board { display: grid; grid-template-columns: repeat(4, 64px); gap: 8px; justify-content: center; }
+        .mem-card {
+            width: 64px; height: 64px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.9rem; cursor: pointer; user-select: none; -webkit-user-select: none;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), 0 4px 5px rgba(255,255,255,0.05);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mem-card.back { background: linear-gradient(135deg, #6d28d9, #4c1d95); }
+        .mem-card.up { background: #1f2937; border: 2px solid #f1c40f; }
+        .mem-card.matched { background: #14532d; opacity: 0.6; border: 2px solid #22c55e; }
+
+        /* سباق العربيات */
+        #raceCanvas {
+            background: #141b26; border: 4px solid #374151; border-radius: 15px;
+            max-width: 95vw; max-height: 48vh; touch-action: none;
+        }
+        .btn-lane { width: 130px; height: 52px; font-size: 1.2rem; }
+
+        /* القنبلة */
+        #bombCanvas {
+            background: #141b26; border: 4px solid #374151; border-radius: 15px;
+            max-width: 95vw; max-height: 34vh; touch-action: none;
+        }
+        /* السومو */
+        .sumo-game { width: 100vw; height: calc(100vh - 50px); display: flex; flex-direction: column; }
+        .sumo-zone { height: auto; flex: 1; min-height: 0; font-size: 1.8rem; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3); }
+        .sumo-zone:active { filter: brightness(1.2); }
+        #sumoCanvas {
+            flex: none; align-self: center; width: min(92vw, 40vh); height: min(92vw, 40vh);
+            background: #141b26; border: 4px solid #374151; border-radius: 15px; margin: 6px 0; box-sizing: border-box;
+        }
+        /* الفراخ */
+        #chickenCanvas {
+            background: #141b26; border: 4px solid #374151; border-radius: 15px;
+            max-width: 95vw; max-height: 40vh; touch-action: none;
+        }
+        #tankCanvas { background:#3f6212; border:4px solid #374151; border-radius:15px; max-width:95vw; max-height:40vh; touch-action:none; }
+        .btn-jump { width: 300px; height: 56px; font-size: 1.2rem; }
+    
+        #sumoCanvas,#raceCanvas,#bombCanvas,#tankCanvas,#sushiCanvas,#chickenCanvas{width:100vw!important;height:calc(100vh - 56px)!important;max-width:none!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain;border:none!important;border-radius:0!important;margin:0!important;display:block;touch-action:none}
+        .fl-p1{position:fixed!important;bottom:12px;left:0;right:0;z-index:30;margin:0!important;opacity:.8}
+        .fl-p2{position:fixed!important;top:58px;left:0;right:0;z-index:30;margin:0!important;opacity:.8}
+        .fl-p1.dpad-container,.fl-p2.dpad-container{left:50%;right:auto;transform:translateX(-50%)}
+        .btn-jump{width:72px!important;height:72px!important;border-radius:50%!important;font-size:1.8rem!important;padding:0!important}
+        #tank-ctrls{position:fixed;inset:0;pointer-events:none;z-index:40}
+        .tk-cl{position:fixed;display:flex;gap:8px;align-items:center;pointer-events:auto;opacity:.85}
+        .tk-cl button{width:54px;height:54px;border-radius:50%;padding:0;font-size:1.3rem;touch-action:none}
+        .tk-cl button.f{width:36px;height:36px;font-size:.95rem}
+        #pongCanvas{width:92vw!important;max-width:92vw!important;height:auto!important;aspect-ratio:450/520!important;max-height:none!important}
+        #chickenCanvas,#sushiCanvas{height:calc(100vh - 50px)!important}
+        .tk-dp{position:fixed;pointer-events:auto;opacity:.85;touch-action:none}
+        .tk-fb{position:fixed;width:42px;height:42px;padding:0;border-radius:50%;font-size:1rem;background:#dc2626;pointer-events:auto;opacity:.85;touch-action:none}
+        .sumo-btn{position:fixed;left:50%;transform:translateX(-50%);width:62px;height:62px;padding:0;border-radius:50%;font-size:1.6rem;z-index:30;opacity:.85;touch-action:none}
+        .sumo-btn:active{transform:translateX(-50%) scale(.93)}
+            .fld{width:300px;max-width:90vw;padding:13px;margin:6px 0;border-radius:12px;border:1px solid #374151;background:#111827;color:#fff;font-size:1rem;box-sizing:border-box;text-align:right}
+        .btn-small.on{background:#e94560!important}
+        #login-error,#o-status{min-height:22px;margin:10px 0;color:#fbbf24;font-weight:bold;max-width:90vw}
+        .panel{width:340px;max-width:92vw;background:#161b22;border:1px solid #30363d;border-radius:16px;padding:14px;margin:8px 0;box-sizing:border-box}
+        .panel h3{margin:0 0 8px;color:#f1c40f}
+        .urow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #30363d;text-align:right}
+        .urow button{width:auto;padding:6px 12px;font-size:.9rem}
+        .urow .del{background:#7f1d1d}
+        .userbar{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:6px;font-size:.95rem}
+        #mbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:500}
+        #mbox .modal{max-width:90vw}
+        #mbox p{font-size:1.2rem;margin:0 0 16px}
+        .nbadge{background:#ef4444;color:#fff;border-radius:999px;padding:1px 8px;font-size:.8rem;margin-right:6px;font-weight:bold}
+        #toast{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#0ea5e9;color:#fff;padding:10px 18px;border-radius:14px;font-weight:bold;z-index:600;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none;max-width:90vw}
+        .inv-row{padding:10px 0;border-bottom:1px solid #30363d;text-align:right}
+        .inv-row .who{font-size:1.05rem;margin-bottom:8px}
+        .inv-row .btns{display:flex;gap:8px}
+        .inv-row .btns button{width:auto;flex:1;padding:8px;font-size:.95rem}
+        .inv-row .acc{background:#16a34a}
+        .inv-row .rej{background:#7f1d1d}
+        #onl-badge{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:4px 12px;border-radius:999px;font-size:.8rem;z-index:60;pointer-events:none}
+    </style>
+</head>
+<body>
+<div id="login-screen" class="screen">
+  <h1 class="logo">🎮 تسجيل الدخول</h1>
+  <div class="game-row"><button class="btn-small on" id="rt-player" onclick="setRole('player')">🎮 لاعب</button><button class="btn-small" id="rt-admin" onclick="setRole('admin')">🛡️ أدمن</button></div>
+  <input id="l-user" class="fld" placeholder="اسم المستخدم" autocomplete="username" onkeydown="if(event.key==='Enter')login()">
+  <input id="l-pass" class="fld" type="password" placeholder="كلمة السر" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+  <button class="btn-main" onclick="login()">دخول</button>
+  <div id="login-error"></div>
+</div>
+
+<div id="admin-screen" class="screen hidden" style="justify-content:flex-start;padding:20px 0 40px">
+  <h2 class="logo" style="font-size:1.8rem">🛡️ لوحة الأدمن</h2>
+  <div class="panel"><h3>إنشاء حساب</h3>
+    <input id="n-name" class="fld" placeholder="الاسم">
+    <input id="n-user" class="fld" placeholder="اسم المستخدم (حروف/أرقام إنجليزي)" autocomplete="off">
+    <input id="n-pass" class="fld" placeholder="كلمة السر" autocomplete="off">
+    <select id="n-role" class="fld"><option value="player">لاعب</option><option value="admin">أدمن</option></select>
+    <button class="btn-main" onclick="createUser()">إنشاء الحساب</button></div>
+  <div class="panel"><h3>الحسابات</h3><div id="a-users"></div></div>
+  <div class="panel"><h3>نقل الحسابات لجهاز آخر</h3>
+    <textarea id="a-io" class="fld" rows="3" placeholder="الصق هنا الحسابات للاستيراد"></textarea>
+    <div class="game-row"><button class="btn-small" onclick="exportAcc()">📋 تصدير</button><button class="btn-small" onclick="importAcc()">📥 استيراد</button></div></div>
+  <button onclick="logout()">تسجيل خروج</button>
+</div>
+
+<div id="online-screen" class="screen hidden" style="justify-content:flex-start;padding:20px 0 40px">
+  <h2 class="logo" style="font-size:1.8rem">👥 العب مع لاعب آخر</h2>
+  <button class="btn-small" style="width:auto;padding:10px 18px" onclick="openNotif('online-screen')">🔔 إشعارات الدعوات <span class="nbadge hidden">0</span></button>
+  <div class="panel">
+    <h3>اختار بطولة أو لعبة واحدة</h3>
+    <select id="o-game" class="fld"><option value="0">🏆 نظام البطولة (10 ألعاب)</option><option value="1">🪨 حجرة ورقة مقص</option><option value="2">❌ اكس او (XO)</option><option value="3">⚡ تحدي الضغط</option><option value="4">🐍 لعبة الثعبان</option><option value="5">🏓 بينج بونج كبير</option><option value="6" disabled>🧠 لعبة الذاكرة (قريباً)</option><option value="7">🏎️ سباق العربيات</option><option value="8">💣 لعبة القنبلة</option><option value="9">🥋 السومو</option><option value="10">🐔 الفراخ</option><option value="11" disabled>🪖 الدبابات (قريباً)</option><option value="12">🍣 السوشي</option></select>
+    <div id="o-status"></div>
+    <h3>اللاعبين</h3><div id="o-list"></div>
+  </div>
+  <button onclick="showMenu()">⬅️ رجوع</button>
+</div>
+
+<div id="notif-screen" class="screen hidden" style="justify-content:flex-start;padding:20px 0 40px">
+  <h2 class="logo" style="font-size:1.8rem">🔔 إشعارات الدعوات</h2>
+  <div class="panel"><div id="inv-list"></div></div>
+  <button onclick="closeNotif()">⬅️ رجوع</button>
+</div>
+<div id="toast" class="hidden"></div>
+
+<div id="mbox" class="hidden"><div class="modal"><p id="mbox-t"></p><div id="mbox-b" class="game-row" style="justify-content:center"></div></div></div>
+<div id="onl-badge" class="hidden"></div>
+
+
+    <div id="main-menu" class="screen hidden" style="padding-top: 20px; position: relative;">
+        <div class="userbar">👤 <b id="me-name"></b> · <span id="peer-status">…</span> <button class="btn-small" style="width:auto;padding:6px 14px" onclick="logout()">خروج</button></div>
+        <h1 class="logo">🎮 لعبة الاصدقاء
+      </h1>
+        <div class="menu-buttons">
+            <button class="btn-main" style="background:#0ea5e9!important" onclick="openOnline()">👥 العب مع لاعب آخر</button>
+            <button class="btn-main" style="background:#f59e0b!important" onclick="openNotif('main-menu')">🔔 إشعارات الدعوات <span class="nbadge hidden">0</span></button>
+            <button class="btn-main" onclick="startGame('tournament', false)">🏆 نظام البطولة (12 لعبة)</button>
+            <button class="btn-cpu-choice" onclick="startGame('tournament', true)">🤖 بطولة ضد (كمبيوتر ذكي)</button>
+            
+            <!-- تم نقل التوقيع الخاص بك هنا أسفل زر الكمبيوتر الذكي مباشرة -->
+            <div class="dev-signature-menu">صمم بواسطة المبدع: <span class="dev-name">محمد السيد</span></div>
+
+            <hr class="divider">
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 1)">🪨   حجرة ورقة مقص</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 1)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 2)">❌ اكس او (XO)</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 2)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 3)">⚡ تحدي الضغط</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 3)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 4)">🐍  لعبة الثعبان</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 4)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 5)">🏓 بينج بونج كبير</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 5)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 6)">🧠 لعبة الذاكرة</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 6)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 7)">🏎️ سباق العربيات</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 7)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 8)">💣 لعبة القنبلة</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 8)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 9)">🥋 السومو</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 9)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 10)">🐔 الفراخ</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 10)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 11)">🪖 الدبابات</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 11)">🤖 ضد آلي</button>
+            </div>
+            <div class="game-row">
+                <button class="btn-small" onclick="startGame('single', false, 12)">🍣 السوشي</button>
+                <button class="btn-small btn-cpu-choice" onclick="startGame('single', true, 12)">🤖 ضد آلي</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div class="header" id="global-header">
+            <button onclick="location.reload()" style="background:none; width:auto; font-size:1.2rem; box-shadow:none; padding:5px;">🏠 خروج</button>
+            <div class="score">P1: <span id="s1">0</span> | <span id="p2-name">P2</span>: <span id="s2">0</span></div>
+            <div id="round-info">جولة 1 / 3</div>
+        </div>
+        
+        <div id="game1" class="game-area hidden">
+            <p id="rps-status">اختر حركتك 🤫</p>
+            <div class="choices">
+                <button onclick="playG1('حجرة')">🪨</button>
+                <button onclick="playG1('ورقة')">📄</button>
+                <button onclick="playG1('مقص')">✂️</button>
+            </div>
+        </div>
+        <div id="game2" class="game-area hidden">
+            <div class="xo-board">
+                <div class="cell" onclick="handleXOClick(0)"></div><div class="cell" onclick="handleXOClick(1)"></div><div class="cell" onclick="handleXOClick(2)"></div>
+                <div class="cell" onclick="handleXOClick(3)"></div><div class="cell" onclick="handleXOClick(4)"></div><div class="cell" onclick="handleXOClick(5)"></div>
+                <div class="cell" onclick="handleXOClick(6)"></div><div class="cell" onclick="handleXOClick(7)"></div><div class="cell" onclick="handleXOClick(8)"></div>
+            </div>
+        </div>
+        <div id="game3" class="game-area hidden">
+            <div class="tap-game">
+                <div id="p1-tap" class="tap-zone" onpointerdown="tap(1)"><span>اضغط!</span></div>
+                <div id="p2-tap" class="tap-zone" onpointerdown="tap(2)"><span>اضغط!</span></div>
+            </div>
+        </div>
+
+        <div id="game4" class="game-area hidden" style="position: relative; width: 100%; height: 100%;">
+            <div class="snake-floating-ui">
+                <button class="btn-home-snake" onclick="location.reload()">🏠 خروج</button>
+                <div id="snake-timer">⏱️ 60ث | P1: 0 - P2: 0</div>
+            </div>
+
+            <div class="control-wrapper">
+                <div class="dpad-container" id="p2-snake-ctrl">
+                    <button class="dpad-btn dpad-up" style="background:#dc2626;" onpointerdown="changeSnakeDir(2, 'UP')">🔼</button>
+                    <button class="dpad-btn dpad-down" style="background:#dc2626;" onpointerdown="changeSnakeDir(2, 'DOWN')">🔽</button>
+                    <button class="dpad-btn dpad-left" style="background:#dc2626;" onpointerdown="changeSnakeDir(2, 'LEFT')">◀️</button>
+                    <button class="dpad-btn dpad-right" style="background:#dc2626;" onpointerdown="changeSnakeDir(2, 'RIGHT')">▶️</button>
+                    <div class="dpad-center"></div>
+                </div>
+                
+                <canvas id="snakeCanvas" width="700" height="700"></canvas>
+                
+                <div class="dpad-container">
+                    <button class="dpad-btn dpad-up" style="background:#23dc5f66;" onpointerdown="changeSnakeDir(1, 'UP')">🔼</button>
+                    <button class="dpad-btn dpad-down" style="background:#23dc5f66;" onpointerdown="changeSnakeDir(1, 'DOWN')">🔽</button>
+                    <button class="dpad-btn dpad-left" style="background:#23dc5f66;" onpointerdown="changeSnakeDir(1, 'LEFT')">◀️</button>
+                    <button class="dpad-btn dpad-right" style="background:#23dc5f66;" onpointerdown="changeSnakeDir(1, 'RIGHT')">▶️</button>
+                    <div class="dpad-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game5" class="game-area hidden">
+            <div class="control-wrapper">
+                <div class="ctrl-row-layout" id="p2-pong-ctrl">
+                    <button class="btn-dir" style="background:#2563eb;" onpointerdown="pongHold(2,-1)" onpointerup="pongHold(2,0)" onpointerleave="pongHold(2,0)" onpointercancel="pongHold(2,0)">🔽P2</button>
+                    <button class="btn-dir" style="background:#2563eb;" onpointerdown="pongHold(2,1)" onpointerup="pongHold(2,0)" onpointerleave="pongHold(2,0)" onpointercancel="pongHold(2,0)">P2🔼</button>
+                </div>
+                
+                <canvas id="pongCanvas" width="450" height="520"></canvas>
+                
+                <div class="ctrl-row-layout">
+                    <button class="btn-dir" style="background:#dc2626;" onpointerdown="pongHold(1,-1)" onpointerup="pongHold(1,0)" onpointerleave="pongHold(1,0)" onpointercancel="pongHold(1,0)">🔼P1</button>
+                    <button class="btn-dir" style="background:#dc2626;" onpointerdown="pongHold(1,1)" onpointerup="pongHold(1,0)" onpointerleave="pongHold(1,0)" onpointercancel="pongHold(1,0)">P1🔽</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game6" class="game-area hidden">
+            <p id="mem-status">دور P1 👆</p>
+            <div class="mem-board" id="mem-board"></div>
+        </div>
+
+        <div id="game7" class="game-area hidden">
+            <div class="control-wrapper">
+                <div class="ctrl-row-layout" id="p2-race-ctrl" style="direction:ltr; margin-bottom:10px;">
+                    <button class="btn-dir btn-lane" style="background:#2563eb;" onpointerdown="raceMove(2, -1)">◀️ P2</button>
+                    <button class="btn-dir btn-lane" style="background:#2563eb;" onpointerdown="raceMove(2, 1)">P2 ▶️</button>
+                </div>
+
+                <canvas id="raceCanvas" width="400" height="460"></canvas>
+
+                <div class="ctrl-row-layout" style="direction:ltr; margin-top:10px;">
+                    <button class="btn-dir btn-lane" style="background:#dc2626;" onpointerdown="raceMove(1, -1)">◀️ P1</button>
+                    <button class="btn-dir btn-lane" style="background:#dc2626;" onpointerdown="raceMove(1, 1)">P1 ▶️</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game8" class="game-area hidden">
+            <div class="control-wrapper">
+                <div class="dpad-container" id="p2-bomb-ctrl" oncontextmenu="return false">
+                    <button class="dpad-btn dpad-up" style="background:#2563eb;" onpointerdown="bombSet(2, 'UP', true)" onpointerup="bombSet(2, 'UP', false)" onpointerleave="bombSet(2, 'UP', false)" onpointercancel="bombSet(2, 'UP', false)">🔼</button>
+                    <button class="dpad-btn dpad-down" style="background:#2563eb;" onpointerdown="bombSet(2, 'DOWN', true)" onpointerup="bombSet(2, 'DOWN', false)" onpointerleave="bombSet(2, 'DOWN', false)" onpointercancel="bombSet(2, 'DOWN', false)">🔽</button>
+                    <button class="dpad-btn dpad-left" style="background:#2563eb;" onpointerdown="bombSet(2, 'LEFT', true)" onpointerup="bombSet(2, 'LEFT', false)" onpointerleave="bombSet(2, 'LEFT', false)" onpointercancel="bombSet(2, 'LEFT', false)">◀️</button>
+                    <button class="dpad-btn dpad-right" style="background:#2563eb;" onpointerdown="bombSet(2, 'RIGHT', true)" onpointerup="bombSet(2, 'RIGHT', false)" onpointerleave="bombSet(2, 'RIGHT', false)" onpointercancel="bombSet(2, 'RIGHT', false)">▶️</button>
+                    <div class="dpad-center"></div>
+                </div>
+
+                <canvas id="bombCanvas" width="400" height="400" style="margin:6px 0;"></canvas>
+
+                <div class="dpad-container"  oncontextmenu="return false">
+                    <button class="dpad-btn dpad-up" style="background:#dc2626;" onpointerdown="bombSet(1, 'UP', true)" onpointerup="bombSet(1, 'UP', false)" onpointerleave="bombSet(1, 'UP', false)" onpointercancel="bombSet(1, 'UP', false)">🔼</button>
+                    <button class="dpad-btn dpad-down" style="background:#dc2626;" onpointerdown="bombSet(1, 'DOWN', true)" onpointerup="bombSet(1, 'DOWN', false)" onpointerleave="bombSet(1, 'DOWN', false)" onpointercancel="bombSet(1, 'DOWN', false)">🔽</button>
+                    <button class="dpad-btn dpad-left" style="background:#dc2626;" onpointerdown="bombSet(1, 'LEFT', true)" onpointerup="bombSet(1, 'LEFT', false)" onpointerleave="bombSet(1, 'LEFT', false)" onpointercancel="bombSet(1, 'LEFT', false)">◀️</button>
+                    <button class="dpad-btn dpad-right" style="background:#dc2626;" onpointerdown="bombSet(1, 'RIGHT', true)" onpointerup="bombSet(1, 'RIGHT', false)" onpointerleave="bombSet(1, 'RIGHT', false)" onpointercancel="bombSet(1, 'RIGHT', false)">▶️</button>
+                    <div class="dpad-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game9" class="game-area hidden">
+            <canvas id="sumoCanvas" width="400" height="700"></canvas>
+            <button class="sumo-btn" style="top:58px;background:#2563eb" onpointerdown="tapSumo(2)"><span id="sumo-p2-label">👊</span></button>
+            <button class="sumo-btn" style="bottom:14px;background:#dc2626" onpointerdown="tapSumo(1)">👊</button>
+        </div>
+
+        <div id="game10" class="game-area hidden">
+            <div class="control-wrapper">
+                <div class="ctrl-row-layout" id="p2-chicken-ctrl" style="margin-bottom:10px;">
+                    <button class="btn-dir btn-jump" style="background:#2563eb;" onpointerdown="chickenJump(2)">⬆️</button>
+                </div>
+
+                <canvas id="chickenCanvas" width="400" height="440" onpointerdown="chPtr(event)"></canvas>
+
+                <div class="ctrl-row-layout" style="margin-top:10px;">
+                    <button class="btn-dir btn-jump" style="background:#dc2626;" onpointerdown="chickenJump(1)">⬆️</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game11" class="game-area hidden">
+            <canvas id="tankCanvas" width="400" height="700"></canvas>
+            <div id="tank-ctrls"></div>
+        </div>
+
+        <div id="game12" class="game-area hidden" onpointerdown="sushiPtr(event)">
+            <canvas id="sushiCanvas" width="400" height="700"></canvas>
+        </div>
+    </div>
+
+    <div id="overlay" class="hidden">
+        <div class="modal">
+            <h2 id="winner-msg"></h2>
+            <button onclick="handleNext()" style="background:#22c55e; width:auto; padding:10px 40px; color:white; box-shadow:none;">متابعة ➡️</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script>
+        const _gc = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (t, o) {
+            if (t === '2d' && !this._hq) { this._hq = 1; const w = this.width, h = this.height; this.width = w * 2; this.height = h * 2; const c = _gc.call(this, '2d', o); c.scale(2, 2); return c; }
+            return _gc.call(this, t, o);
+        };
+        function fitCanvas(id) {
+            const cv = document.getElementById(id), h = Math.max(400, Math.min(900, Math.round(400 * (innerHeight - 56) / innerWidth)));
+            cv._hq = 0; cv.width = 400; cv.height = h; return h;
+        }
+        document.querySelectorAll('.control-wrapper').forEach(w => { if (w.closest('#game4,#game5')) return; w.children[0].classList.add('fl-p2'); w.children[2].classList.add('fl-p1'); });
+        let mode = "", currentGame = 1, subRound = 1, s1 = 0, s2 = 0;
+        let isCPUMode = false, currentPlayer = 1, p1Choice = "", isXTurn = true, tapHeight = 50;
+        let xoBoard = Array(9).fill("");
+        let cpuTapInterval = null;
+        
+        let gameInterval = null, timerInterval = null;
+        let snake1, snake2, food, snakeDir1, snakeDir2, gridSize = 25;
+        let snakeScore1 = 0, snakeScore2 = 0, snakeTimeLeft = 60;
+        let ball, paddle1, paddle2, paddleHeight = 150, paddleWidth = 28;
+        let pongDir1 = 0, pongDir2 = 0;
+
+        function startGame(m, cpu, gId = 1) {
+            mode = m; isCPUMode = cpu; currentGame = gId;
+            document.getElementById('p2-name').innerText = cpu ? "🤖" : "P2";
+            document.getElementById('p2-snake-ctrl').style.visibility = cpu ? 'hidden' : 'visible';
+            document.getElementById('p2-pong-ctrl').style.visibility = cpu ? 'hidden' : 'visible';
+            document.getElementById('p2-race-ctrl').style.visibility = cpu ? 'hidden' : 'visible';
+            document.getElementById('p2-bomb-ctrl').style.visibility = cpu ? 'hidden' : 'visible';
+            document.getElementById('p2-chicken-ctrl').style.visibility = cpu ? 'hidden' : 'visible';
+            document.getElementById('sumo-p2-label').innerText = cpu ? '🤖' : '👊';
+            initGame();
+        }
+
+        function initGame() {
+            s1 = 0; s2 = 0; subRound = 1;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            showGameArea();
+        }
+
+        function showGameArea() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            document.querySelectorAll('.game-area').forEach(g => g.classList.add('hidden'));
+            document.getElementById(`game${currentGame}`).classList.remove('hidden');
+            
+            if (currentGame === 4) {
+                document.getElementById('global-header').style.display = 'none';
+                document.getElementById('game-screen').style.paddingTop = '0';
+            } else {
+                document.getElementById('global-header').style.display = 'flex';
+                document.getElementById('game-screen').style.paddingTop = '50px';
+            }
+
+            if (ONL && ONL.role === 2 && currentGame >= 4) { updateUI(); return; }
+            if (currentGame === 2) resetXO();
+            if (currentGame === 3) resetTap();
+            if (currentGame === 4) initSnake();
+            if (currentGame === 5) initPong();
+            if (currentGame === 6) initMemory();
+            if (currentGame === 7) initRace();
+            if (currentGame === 8) initBomb();
+            if (currentGame === 9) initSumo();
+            if (currentGame === 10) initChicken();
+            if (currentGame === 11) initTank();
+            if (currentGame === 12) initSushi();
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('s1').innerText = s1;
+            document.getElementById('s2').innerText = s2;
+            document.getElementById('round-info').innerText = `جولة ${subRound} / 3`;
+        }
+
+        function playG1(move) {
+            if (ONL) return onlRps(move);
+            const status = document.getElementById('rps-status');
+            if (currentPlayer === 1) {
+                p1Choice = move;
+                if (isCPUMode) {
+                    const options = ['حجرة', 'ورقة', 'مقص'];
+                    let cpuMove = options[Math.floor(Math.random() * 3)];
+                    status.innerText = `أنت: ${p1Choice} | 🤖: ${cpuMove}`;
+                    if (p1Choice !== cpuMove) {
+                        const win = (p1Choice == 'حجرة' && cpuMove == 'مقص') || (p1Choice == 'ورقة' && cpuMove == 'حجرة') || (p1Choice == 'مقص' && cpuMove == 'ورقة');
+                        win ? s1++ : s2++;
+                    }
+                    setTimeout(checkRound, 1000);
+                } else {
+                    currentPlayer = 2; status.innerText = "دور اللاعب 2 👀";
+                }
+            } else {
+                if (p1Choice !== move) {
+                    const win = (p1Choice == 'حجرة' && move == 'مقص') || (p1Choice == 'ورقة' && move == 'حجرة') || (p1Choice == 'مقص' && move == 'ورقة');
+                    win ? s1++ : s2++;
+                }
+                p1Choice = ""; currentPlayer = 1; status.innerText = "دور اللاعب 1 🤫";
+                checkRound();
+            }
+        }
+
+        function handleXOClick(idx) {
+            if (ONL) { if (xoBoard[idx] !== "" || isXTurn !== (ONL.role === 1)) return; ONL.send({t:"xo", i:idx}); makeMove(idx); return; }
+            if (xoBoard[idx] !== "" || (isCPUMode && !isXTurn)) return;
+            makeMove(idx);
+            if (isCPUMode && !checkWin(xoBoard) && xoBoard.includes("")) {
+                setTimeout(cpuSmartXO, 400);
+            }
+        }
+        function cpuSmartXO() {
+            let move = findBestMove("O") || findBestMove("X");
+            if (move === null && xoBoard[4] === "") move = 4;
+            if (move === null) {
+                let empties = xoBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+                move = empties[Math.floor(Math.random() * empties.length)];
+            }
+            if (move !== null) makeMove(move);
+        }
+        function findBestMove(p) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let c of wins) {
+                let cnt = 0, e = -1;
+                c.forEach(i => { if(xoBoard[i]===p) cnt++; else if(xoBoard[i]==="") e=i; });
+                if (cnt === 2 && e !== -1) return e;
+            }
+            return null;
+        }
+        function makeMove(idx) {
+            xoBoard[idx] = isXTurn ? "X" : "O";
+            renderXO();
+            if (checkWin(xoBoard)) { isXTurn ? s1++ : s2++; setTimeout(checkRound, 500); }
+            else if (!xoBoard.includes("")) { setTimeout(checkRound, 500); }
+            else { isXTurn = !isXTurn; }
+        }
+        function renderXO() {
+            const cells = document.querySelectorAll('.cell');
+            xoBoard.forEach((v, i) => { cells[i].innerText = v; cells[i].style.color = v === "X" ? "#e94560" : "#38bdf8"; });
+        }
+        function checkWin(b) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(p => b[p[0]] !== "" && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]);
+        }
+        function resetXO() { xoBoard = Array(9).fill(""); isXTurn = true; renderXO(); }
+
+        function tapCore(p) {
+            if (p === 2 && isCPUMode) return;
+            tapHeight = (p === 1) ? tapHeight + 5 : tapHeight - 5;
+            updateTapUI();
+            if (isCPUMode && !cpuTapInterval) {
+                cpuTapInterval = setInterval(() => {
+                    let speed = tapHeight > 70 ? 2.8 : 2.0;
+                    tapHeight -= speed; updateTapUI();
+                    if (tapHeight <= 5) { s2++; endTap(); checkRound(); }
+                }, 80);
+            }
+            if (tapHeight >= 95) { s1++; endTap(); checkRound(); }
+            else if (tapHeight <= 5 && !isCPUMode) { s2++; endTap(); checkRound(); }
+        }
+        function updateTapUI() {
+            document.getElementById('p1-tap').style.height = tapHeight + "%";
+            document.getElementById('p2-tap').style.height = (100 - tapHeight) + "%";
+        }
+        function endTap() { clearInterval(cpuTapInterval); cpuTapInterval = null; }
+        function resetTap() { tapHeight = 50; updateTapUI(); endTap(); }
+
+
+        // --- لعبة 4: الثعبان ---
+        function initSnake() {
+            snake1 = [{x: 75, y: 350}, {x: 50, y: 350}, {x: 25, y: 350}];
+            snake2 = [{x: 600, y: 350}, {x: 625, y: 350}, {x: 650, y: 350}];
+            snakeDir1 = 'RIGHT'; snakeDir2 = 'LEFT';
+            snakeScore1 = 0; snakeScore2 = 0;
+            snakeTimeLeft = 60;
+            
+            updateSnakeTimerUI();
+            spawnFood();
+            
+            gameInterval = setInterval(updateSnake, 100);
+            timerInterval = setInterval(() => {
+                snakeTimeLeft--;
+                updateSnakeTimerUI();
+                if (snakeTimeLeft <= 0) {
+                    clearInterval(gameInterval);
+                    clearInterval(timerInterval);
+                    if (snakeScore1 > snakeScore2) s1++;
+                    else if (snakeScore2 > snakeScore1) s2++;
+                    checkRound();
+                }
+            }, 1000);
+        }
+        
+        function updateSnakeTimerUI() {
+            document.getElementById('snake-timer').innerText = `⏱️ ${snakeTimeLeft}ث | P1: ${snakeScore1} - P2: ${snakeScore2}`;
+        }
+
+        function spawnFood() {
+            food = {
+                x: Math.floor(Math.random() * (650 / gridSize)) * gridSize + gridSize,
+                y: Math.floor(Math.random() * (650 / gridSize)) * gridSize + gridSize
+            };
+        }
+
+        function changeSnakeDir(player, dir) {
+            if (player === 1) {
+                if (dir === 'UP' && snakeDir1 !== 'DOWN') snakeDir1 = dir;
+                if (dir === 'DOWN' && snakeDir1 !== 'UP') snakeDir1 = dir;
+                if (dir === 'LEFT' && snakeDir1 !== 'RIGHT') snakeDir1 = dir;
+                if (dir === 'RIGHT' && snakeDir1 !== 'LEFT') snakeDir1 = dir;
+            } else if (player === 2 && !isCPUMode) {
+                if (dir === 'UP' && snakeDir2 !== 'DOWN') snakeDir2 = dir;
+                if (dir === 'DOWN' && snakeDir2 !== 'UP') snakeDir2 = dir;
+                if (dir === 'LEFT' && snakeDir2 !== 'RIGHT') snakeDir2 = dir;
+                if (dir === 'RIGHT' && snakeDir2 !== 'LEFT') snakeDir2 = dir;
+            }
+        }
+
+        function updateSnake() {
+            const cvs = document.getElementById('snakeCanvas');
+            const ctx = cvs.getContext('2d');
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+            if (isCPUMode) {
+                let head2 = snake2[0];
+                if (head2.x < food.x && snakeDir2 !== 'LEFT') snakeDir2 = 'RIGHT';
+                else if (head2.x > food.x && snakeDir2 !== 'RIGHT') snakeDir2 = 'LEFT';
+                else if (head2.y < food.y && snakeDir2 !== 'UP') snakeDir2 = 'DOWN';
+                else if (head2.y > food.y && snakeDir2 !== 'DOWN') snakeDir2 = 'UP';
+            }
+
+            let head1 = Object.assign({}, snake1[0]);
+            if (snakeDir1 === 'UP') head1.y -= gridSize;
+            if (snakeDir1 === 'DOWN') head1.y += gridSize;
+            if (snakeDir1 === 'LEFT') head1.x -= gridSize;
+            if (snakeDir1 === 'RIGHT') head1.x += gridSize;
+
+            if (head1.x < 0) head1.x = 700 - gridSize;
+            if (head1.x >= 700) head1.x = 0;
+            if (head1.y < 0) head1.y = 700 - gridSize;
+            if (head1.y >= 700) head1.y = 0;
+
+            let head2 = Object.assign({}, snake2[0]);
+            if (snakeDir2 === 'UP') head2.y -= gridSize;
+            if (snakeDir2 === 'DOWN') head2.y += gridSize;
+            if (snakeDir2 === 'LEFT') head2.x -= gridSize;
+            if (snakeDir2 === 'RIGHT') head2.x += gridSize;
+
+            if (head2.x < 0) head2.x = 700 - gridSize;
+            if (head2.x >= 700) head2.x = 0;
+            if (head2.y < 0) head2.y = 700 - gridSize;
+            if (head2.y >= 700) head2.y = 0;
+
+            snake1.unshift(head1);
+            if (Math.abs(head1.x - food.x) < gridSize && Math.abs(head1.y - food.y) < gridSize) {
+                snakeScore1++; spawnFood(); updateSnakeTimerUI();
+            } else { snake1.pop(); }
+
+            snake2.unshift(head2);
+            if (Math.abs(head2.x - food.x) < gridSize && Math.abs(head2.y - food.y) < gridSize) {
+                snakeScore2++; spawnFood(); updateSnakeTimerUI();
+            } else { snake2.pop(); }
+
+            drawRealisticApple(ctx, food.x, food.y);
+            drawRealisticSnake(ctx, snake1, snakeDir1, "#16a34a", "#4ade80"); 
+            drawRealisticSnake(ctx, snake2, snakeDir2, "#ea580c", "#fb923c"); 
+        }
+
+        function drawRealisticSnake(ctx, snake, dir, primaryColor, scaleColor) {
+            let radius = gridSize / 2;
+            ctx.save();
+            ctx.lineCap = "round";
+            ctx.lineWidth = gridSize - 2;
+
+            for (let i = 0; i < snake.length; i++) {
+                if (i > 0) {
+                    let prev = snake[i - 1];
+                    let curr = snake[i];
+                    if (Math.abs(prev.x - curr.x) > gridSize || Math.abs(prev.y - curr.y) > gridSize) {
+                        continue; 
+                    }
+                    ctx.strokeStyle = (i === 1) ? primaryColor : scaleColor;
+                    ctx.beginPath();
+                    ctx.moveTo(prev.x + radius, prev.y + radius);
+                    ctx.lineTo(curr.x + radius, curr.y + radius);
+                    ctx.stroke();
+                }
+            }
+
+            let head = snake[0];
+            ctx.fillStyle = primaryColor;
+            ctx.beginPath(); 
+            ctx.arc(head.x + radius, head.y + radius, radius, 0, Math.PI * 2); 
+            ctx.fill();
+            
+            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(head.x + radius - 4, head.y + radius - 3, 2.5, 0, Math.PI*2); ctx.arc(head.x + radius + 4, head.y + radius - 3, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(head.x + radius - 4, head.y + radius - 3, 1, 0, Math.PI*2); ctx.arc(head.x + radius + 4, head.y + radius - 3, 1, 0, Math.PI*2); ctx.fill(); 
+            ctx.restore();
+        }
+
+        function drawRealisticApple(ctx, x, y) {
+            let r = gridSize / 2;
+            ctx.save();
+            let grad = ctx.createRadialGradient(x + r - 2, y + r - 2, 1, x + r, y + r, r);
+            grad.addColorStop(0, "#ff6b6b"); grad.addColorStop(1, "#991b1b");
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(x + r, y + r, r, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+        }
+
+        // --- لعبة 5: بينج بونج كبير ---
+        const PH = 520;
+        function initPong() {
+            paddle1 = paddle2 = (PH - paddleHeight) / 2; pongDir1 = 0; pongDir2 = 0;
+            ball = { x: 225, y: PH / 2, dx: 4.0, dy: 2.5, radius: 10 };
+            gameInterval = setInterval(updatePong, 1000/60);
+        }
+
+        function movePongPaddle(p, val) {
+            if (p === 1) paddle1 = Math.max(0, Math.min(PH - paddleHeight, paddle1 + val));
+            if (p === 2 && !isCPUMode) paddle2 = Math.max(0, Math.min(PH - paddleHeight, paddle2 + val));
+        }
+
+        function pongHold(p, dir) {
+            if (p === 1) pongDir1 = dir;
+            else if (!isCPUMode) pongDir2 = dir;
+        }
+
+        function updatePong() {
+            movePongPaddle(1, pongDir1 * 5);
+            movePongPaddle(2, pongDir2 * 5);
+            const cvs = document.getElementById('pongCanvas');
+            const ctx = cvs.getContext('2d');
+            ctx.clearRect(0, 0, 450, PH);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.lineWidth = 2.5; ctx.setLineDash([8, 6]);
+            ctx.beginPath(); ctx.moveTo(450/2, 0); ctx.lineTo(450/2, PH); ctx.stroke(); ctx.setLineDash([]); 
+
+            if (isCPUMode) {
+                let target = ball.y - paddleHeight/2;
+                paddle2 += (target - paddle2) * 0.13; 
+            }
+
+            ball.x += ball.dx; ball.y += ball.dy;
+
+            if (ball.y - ball.radius <= 0) { ball.dy *= -1; ball.y = ball.radius; }
+            if (ball.y + ball.radius >= PH) { ball.dy *= -1; ball.y = PH - ball.radius; }
+
+            if (ball.x - ball.radius <= paddleWidth) {
+                if (ball.y >= paddle1 && ball.y <= paddle1 + paddleHeight) {
+                    ball.dx *= -1; ball.x = paddleWidth + ball.radius; ball.dx *= 1.04;
+                } else { s2++; clearInterval(gameInterval); setTimeout(checkRound, 500); return; }
+            }
+            if (ball.x + ball.radius >= 450 - paddleWidth) {
+                if (ball.y >= paddle2 && ball.y <= paddle2 + paddleHeight) {
+                    ball.dx *= -1; ball.x = 450 - paddleWidth - ball.radius; ball.dx *= 1.04;
+                } else { s1++; clearInterval(gameInterval); setTimeout(checkRound, 500); return; }
+            }
+
+            drawRealisticPaddle(ctx, 4, paddle1, paddleWidth, paddleHeight, true, "#dc2626");
+            drawRealisticPaddle(ctx, 450 - paddleWidth - 4, paddle2, paddleWidth, paddleHeight, false, "#2563eb");
+            drawRealisticBall(ctx, ball.x, ball.y, ball.radius);
+        }
+
+        function drawRealisticPaddle(ctx, x, y, width, height, isLeft, rubberColor) {
+            ctx.save(); ctx.fillStyle = "#b45309"; ctx.beginPath(); ctx.roundRect(x, y, width, height, 8); ctx.fill();
+            ctx.fillStyle = rubberColor; ctx.beginPath(); ctx.roundRect(isLeft ? x : x + 3, y + 2, width - 3, height - 4, 6); ctx.fill();
+            ctx.restore();
+        }
+
+        function drawRealisticBall(ctx, x, y, radius) {
+            ctx.save(); ctx.fillStyle = "#fff7ed"; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+
+        // --- لعبة 6: الذاكرة ---
+        const MEM_SYMS = ['🐶','🐱','🦁','🐸','🐼','🦊','🐵','🐯','🍎','⚽','🚀','⭐'];
+        let memCards = [], memFirst = null, memLock = false, memTurn = 1, memPairs = [0, 0], cpuKnown = {};
+
+        function initMemory() {
+            const syms = [...MEM_SYMS].sort(() => Math.random() - 0.5).slice(0, 6); // 6 أزواج = 12 كارت
+            const deck = [...syms, ...syms].sort(() => Math.random() - 0.5);
+            memCards = deck.map(sym => ({ sym, flipped: false, matched: false }));
+            memFirst = null; memLock = false; memPairs = [0, 0]; cpuKnown = {};
+            memTurn = (subRound % 2 === 1) ? 1 : 2;
+            renderMem();
+            if (isCPUMode && memTurn === 2) setTimeout(cpuMemPick, 800);
+        }
+
+        function renderMem() {
+            document.getElementById('mem-board').innerHTML = memCards.map((c, i) =>
+                `<div class="mem-card ${c.matched ? 'matched' : c.flipped ? 'up' : 'back'}" onclick="memClick(${i})">${(c.flipped || c.matched) ? c.sym : '❓'}</div>`
+            ).join('');
+            const p2 = isCPUMode ? '🤖' : 'P2';
+            document.getElementById('mem-status').innerText =
+                `دور ${memTurn === 1 ? 'P1' : p2} 👆 | الأزواج: P1 ${memPairs[0]} - ${p2} ${memPairs[1]}`;
+        }
+
+        function memClick(i) {
+            if (memLock || (isCPUMode && memTurn === 2)) return;
+            const c = memCards[i];
+            if (!c || c.flipped || c.matched) return;
+            memFlip(i);
+        }
+
+        function memFlip(i) {
+            const c = memCards[i];
+            c.flipped = true;
+            if (Math.random() < 0.7) cpuKnown[i] = c.sym; // الكمبيوتر ممكن ينسى بعض الكروت
+            renderMem();
+
+            if (memFirst === null) {
+                memFirst = i;
+                if (isCPUMode && memTurn === 2) setTimeout(cpuMemPick, 700);
+                return;
+            }
+
+            const a = memFirst, b = i;
+            memFirst = null; memLock = true;
+            setTimeout(() => {
+                if (memCards[a].sym === memCards[b].sym) {
+                    memCards[a].matched = memCards[b].matched = true;
+                    memPairs[memTurn - 1]++;
+                    delete cpuKnown[a]; delete cpuKnown[b];
+                } else {
+                    memCards[a].flipped = memCards[b].flipped = false;
+                    memTurn = (memTurn === 1) ? 2 : 1;
+                }
+                memLock = false;
+                renderMem();
+                if (memCards.every(x => x.matched)) { setTimeout(endMemRound, 600); return; }
+                if (isCPUMode && memTurn === 2) setTimeout(cpuMemPick, 700);
+            }, 900);
+        }
+
+        function cpuMemPick() {
+            if (memLock || memTurn !== 2) return;
+            const avail = memCards.map((c, i) => (!c.matched && !c.flipped) ? i : -1).filter(i => i >= 0);
+            if (!avail.length) return;
+            const known = avail.filter(i => cpuKnown[i] !== undefined);
+
+            if (memFirst === null) {
+                for (const i of known) for (const j of known) {
+                    if (i < j && cpuKnown[i] === cpuKnown[j]) return memFlip(i);
+                }
+                const unknown = avail.filter(i => cpuKnown[i] === undefined);
+                const pool = unknown.length ? unknown : avail;
+                memFlip(pool[Math.floor(Math.random() * pool.length)]);
+            } else {
+                const sym = memCards[memFirst].sym;
+                const match = known.find(k => cpuKnown[k] === sym);
+                if (match !== undefined) return memFlip(match);
+                const unknown = avail.filter(i => cpuKnown[i] === undefined);
+                const pool = unknown.length ? unknown : avail;
+                memFlip(pool[Math.floor(Math.random() * pool.length)]);
+            }
+        }
+
+        function endMemRound() {
+            if (memPairs[0] > memPairs[1]) s1++;
+            else if (memPairs[1] > memPairs[0]) s2++;
+            checkRound();
+        }
+
+        // --- لعبة 7: سباق العربيات ---
+        const RACE_W = 400, RACE_H = 460, ROAD_W = 180, LANE_W = 60, CAR_H = 70, OBS_H = 60;
+        const OBS_COLORS = ['#f59e0b', '#a855f7', '#14b8a6', '#9ca3af', '#eab308'];
+        let raceLane1 = 1, raceLane2 = 1, raceObs = [], raceSpeed = 4, raceSpawnAcc = 0, raceFrame = 0, raceDist = 0, raceStripe = 0;
+
+        function initRace() {
+            raceLane1 = 1; raceLane2 = 1; raceObs = [];
+            raceSpeed = 4; raceSpawnAcc = 60; raceFrame = 0; raceDist = 0; raceStripe = 0;
+            gameInterval = setInterval(updateRace, 1000 / 60);
+        }
+
+        function raceMove(p, dir) {
+            if (p === 1) raceLane1 = Math.max(0, Math.min(2, raceLane1 + dir));
+            else if (!isCPUMode) raceLane2 = Math.max(0, Math.min(2, raceLane2 + dir));
+        }
+
+        function spawnRaceRow() {
+            const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
+            const n = Math.random() < 0.35 ? 2 : 1; // مستحيل تتسد الـ 3 حارات
+            lanes.slice(0, n).forEach(l => raceObs.push({
+                lane: l, y: -OBS_H, color: OBS_COLORS[Math.floor(Math.random() * OBS_COLORS.length)]
+            }));
+        }
+
+        function cpuRaceThink() {
+            const carY = RACE_H - CAR_H - 20;
+            const lookahead = 60 + raceSpeed * 18;
+            const danger = l => raceObs.some(o => o.lane === l && o.y + OBS_H > carY - lookahead && o.y < carY + CAR_H);
+            if (Math.random() < 0.04) return; // لحظة شرود
+            const l = raceLane2;
+            if (!danger(l)) return;
+            const options = [l - 1, l + 1].filter(x => x >= 0 && x <= 2 && !danger(x));
+            if (options.length) { raceLane2 = options[Math.floor(Math.random() * options.length)]; return; }
+            const safe = [0, 1, 2].find(x => !danger(x));
+            if (safe !== undefined && Math.abs(safe - l) === 2) {
+                const midNear = raceObs.some(o => o.lane === 1 && o.y + OBS_H > carY - 30 && o.y < carY + CAR_H);
+                if (!midNear) raceLane2 = 1;
+            }
+        }
+
+        function drawRaceCar(ctx, cx, y, color, crashed) {
+            ctx.save();
+            ctx.fillStyle = "#111827";
+            ctx.fillRect(cx - 24, y + 8, 6, 18); ctx.fillRect(cx + 18, y + 8, 6, 18);
+            ctx.fillRect(cx - 24, y + CAR_H - 26, 6, 18); ctx.fillRect(cx + 18, y + CAR_H - 26, 6, 18);
+            ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(cx - 20, y, 40, CAR_H, 10); ctx.fill();
+            ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.beginPath(); ctx.roundRect(cx - 14, y + 16, 28, 16, 4); ctx.fill();
+            ctx.beginPath(); ctx.roundRect(cx - 14, y + 42, 28, 12, 4); ctx.fill();
+            ctx.fillStyle = "#fef08a"; ctx.fillRect(cx - 16, y + 1, 7, 4); ctx.fillRect(cx + 9, y + 1, 7, 4);
+            if (crashed) { ctx.font = "44px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("💥", cx, y + CAR_H / 2); }
+            ctx.restore();
+        }
+
+        function updateRace() {
+            const cvs = document.getElementById('raceCanvas');
+            const ctx = cvs.getContext('2d');
+            ctx.clearRect(0, 0, RACE_W, RACE_H);
+            ctx.direction = "ltr";
+
+            raceFrame++;
+            const countdown = raceFrame < 180;
+            const carY = RACE_H - CAR_H - 20;
+            let crash1 = false, crash2 = false;
+
+            if (!countdown) {
+                raceSpeed += 0.003;
+                raceDist += raceSpeed;
+                raceStripe = (raceStripe + raceSpeed) % 40;
+                raceSpawnAcc += raceSpeed;
+                if (raceSpawnAcc >= 190) { spawnRaceRow(); raceSpawnAcc = 0; }
+                raceObs.forEach(o => o.y += raceSpeed);
+                raceObs = raceObs.filter(o => o.y < RACE_H);
+                if (isCPUMode && raceFrame % 4 === 0) cpuRaceThink();
+                const hit = lane => raceObs.some(o => o.lane === lane && o.y + OBS_H > carY + 6 && o.y < carY + CAR_H - 6);
+                crash1 = hit(raceLane1); crash2 = hit(raceLane2);
+            }
+
+            [0, 1].forEach(p => {
+                const x0 = 10 + p * 200;
+                ctx.fillStyle = "#1f2937"; ctx.fillRect(x0, 0, ROAD_W, RACE_H);
+                ctx.fillStyle = "#f1c40f"; ctx.fillRect(x0 - 3, 0, 3, RACE_H); ctx.fillRect(x0 + ROAD_W, 0, 3, RACE_H);
+                ctx.fillStyle = "rgba(255,255,255,0.25)";
+                for (let l = 1; l < 3; l++)
+                    for (let y = -40 + raceStripe; y < RACE_H; y += 40) ctx.fillRect(x0 + l * LANE_W - 1.5, y, 3, 22);
+                raceObs.forEach(o => drawRaceCar(ctx, x0 + o.lane * LANE_W + LANE_W / 2, o.y, o.color, false));
+                const lane = p === 0 ? raceLane1 : raceLane2;
+                const crashed = p === 0 ? crash1 : crash2;
+                drawRaceCar(ctx, x0 + lane * LANE_W + LANE_W / 2, carY, p === 0 ? "#dc2626" : "#2563eb", crashed);
+                ctx.fillStyle = "#fff"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText(p === 0 ? "P1" : (isCPUMode ? "🤖" : "P2"), x0 + ROAD_W / 2, 18);
+            });
+
+            ctx.fillStyle = "rgba(0,0,0,0.65)"; ctx.beginPath(); ctx.roundRect(RACE_W / 2 - 45, 34, 90, 26, 8); ctx.fill();
+            ctx.fillStyle = "#f1c40f"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("🏁 " + Math.floor(raceDist / 10), RACE_W / 2, 47);
+
+            if (countdown) {
+                ctx.fillStyle = "#f1c40f"; ctx.font = "bold 90px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.shadowColor = "#f39c12"; ctx.shadowBlur = 25;
+                ctx.fillText(Math.ceil((180 - raceFrame) / 60), RACE_W / 2, RACE_H / 2 - 40);
+                ctx.shadowBlur = 0;
+            }
+
+            if (crash1 || crash2) {
+                clearInterval(gameInterval);
+                if (crash1 && !crash2) s2++;
+                else if (crash2 && !crash1) s1++;
+                setTimeout(checkRound, 1000);
+            }
+        }
+
+
+        // --- لعبة 8: القنبلة 💣 ---
+        const BOMB_W = 400, BOMB_H = 400, BOMB_R = 18;
+        let bp1, bp2, bombHolder = 1, bombLeft = 1, bombMax = 1, bombImmune = 0, bombFrame = 0, bombBoom = 0, bombOver = false;
+        let bombKeys = { 1: {}, 2: {} }, cpuBombDir = { x: 0, y: 0 };
+
+        function initBomb() {
+            bp1 = { x: 90, y: 200 }; bp2 = { x: 310, y: 200 };
+            bombHolder = Math.random() < 0.5 ? 1 : 2;
+            bombMax = bombLeft = Math.floor((9 + Math.random() * 7) * 60); // بين 9 و 16 ثانية (سر!)
+            bombImmune = 0; bombFrame = 0; bombBoom = 0; bombOver = false;
+            bombKeys = { 1: {}, 2: {} }; cpuBombDir = { x: 0, y: 0 };
+            gameInterval = setInterval(updateBomb, 1000 / 60);
+        }
+
+        function bombSet(p, dir, on) {
+            if (p === 2 && isCPUMode) return;
+            bombKeys[p][dir] = on;
+        }
+
+        function bombVec(p) {
+            const k = bombKeys[p];
+            const dx = (k.RIGHT ? 1 : 0) - (k.LEFT ? 1 : 0), dy = (k.DOWN ? 1 : 0) - (k.UP ? 1 : 0);
+            const m = Math.hypot(dx, dy);
+            return m ? { x: dx / m, y: dy / m } : { x: 0, y: 0 };
+        }
+
+        function cpuBombThink() {
+            const me = bp2, o = bp1;
+            let dx, dy;
+            if (bombHolder === 2) {
+                dx = o.x - me.x; dy = o.y - me.y; // يجري ورا اللاعب
+            } else {
+                dx = me.x - o.x; dy = me.y - o.y; // يهرب
+                const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+                const edge = Math.max(Math.abs(me.x - 200), Math.abs(me.y - 200)) / 200;
+                const w = edge * edge * 2.4;
+                dx += ((200 - me.x) / 200) * w; dy += ((200 - me.y) / 200) * w;
+                dx += (Math.random() - 0.5) * 0.6; dy += (Math.random() - 0.5) * 0.6;
+            }
+            const m = Math.hypot(dx, dy) || 1;
+            cpuBombDir = { x: dx / m, y: dy / m };
+        }
+
+        function drawBombPlayer(ctx, p, other, color, isHolder, faded, flash) {
+            ctx.save();
+            ctx.globalAlpha = faded ? 0.55 : 1;
+            if (isHolder && flash) {
+                ctx.fillStyle = "rgba(239,68,68,0.35)";
+                ctx.beginPath(); ctx.arc(p.x, p.y, BOMB_R + 14, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.beginPath(); ctx.ellipse(p.x + 3, p.y + BOMB_R - 1, BOMB_R * 0.95, BOMB_R * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, BOMB_R, 0, Math.PI * 2); ctx.fill();
+            const g3 = ctx.createRadialGradient(p.x - 7, p.y - 8, 2, p.x, p.y, BOMB_R + 2);
+            g3.addColorStop(0, "rgba(255,255,255,0.7)"); g3.addColorStop(0.45, "rgba(255,255,255,0)"); g3.addColorStop(1, "rgba(0,0,0,0.55)");
+            ctx.fillStyle = g3; ctx.beginPath(); ctx.arc(p.x, p.y, BOMB_R, 0, Math.PI * 2); ctx.fill();
+            let dx = other.x - p.x, dy = other.y - p.y; const d = Math.hypot(dx, dy) || 1; dx = dx / d * 2; dy = dy / d * 2;
+            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x - 6, p.y - 3, 4.5, 0, Math.PI * 2); ctx.arc(p.x + 6, p.y - 3, 4.5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(p.x - 6 + dx, p.y - 3 + dy, 2, 0, Math.PI * 2); ctx.arc(p.x + 6 + dx, p.y - 3 + dy, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+        function updateBomb() {
+            const ctx = document.getElementById('bombCanvas').getContext('2d');
+            ctx.clearRect(0, 0, BOMB_W, BOMB_H);
+            ctx.direction = "ltr";
+            bombFrame++;
+            const countdown = bombFrame < 120;
+            const cl = v => Math.max(BOMB_R, Math.min(BOMB_W - BOMB_R, v));
+
+            if (!countdown && !bombOver) {
+                if (isCPUMode && bombFrame % 5 === 0) cpuBombThink();
+                const v1 = bombVec(1), v2 = isCPUMode ? cpuBombDir : bombVec(2);
+                const sp1 = bombHolder === 1 ? 3.3 : 3.0, sp2 = bombHolder === 2 ? 3.3 : 3.0;
+                bp1.x = cl(bp1.x + v1.x * sp1); bp1.y = cl(bp1.y + v1.y * sp1);
+                bp2.x = cl(bp2.x + v2.x * sp2); bp2.y = cl(bp2.y + v2.y * sp2);
+
+                if (bombImmune > 0) bombImmune--;
+                else if (Math.hypot(bp1.x - bp2.x, bp1.y - bp2.y) < BOMB_R * 2 + 2) {
+                    bombHolder = bombHolder === 1 ? 2 : 1; bombImmune = 90; // ممنوع الرد فوراً
+                    const dx = bp1.x - bp2.x, dy = bp1.y - bp2.y, d = Math.hypot(dx, dy) || 1;
+                    bp1.x = cl(bp1.x + dx / d * 14); bp1.y = cl(bp1.y + dy / d * 14);
+                    bp2.x = cl(bp2.x - dx / d * 14); bp2.y = cl(bp2.y - dy / d * 14);
+                }
+                bombLeft--;
+                if (bombLeft <= 0) { bombOver = true; bombBoom = 0; }
+            }
+
+            // الأرضية
+            ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 2;
+            for (let i = 0; i <= BOMB_W; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, BOMB_H); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(BOMB_W, i); ctx.stroke();
+            }
+
+            const f = bombLeft / bombMax;
+            const flash = Math.floor(bombFrame / (6 + 34 * f)) % 2 === 0;
+            const holderP = bombHolder === 1 ? bp1 : bp2;
+
+            drawBombPlayer(ctx, bp1, bp2, "#dc2626", bombHolder === 1 && !bombOver, bombHolder === 2 && bombImmune > 0, flash);
+            drawBombPlayer(ctx, bp2, bp1, "#2563eb", bombHolder === 2 && !bombOver, bombHolder === 1 && bombImmune > 0, flash);
+            ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("P1", bp1.x, bp1.y + 10); ctx.fillText(isCPUMode ? "🤖" : "P2", bp2.x, bp2.y + 10);
+
+            if (!bombOver) {
+                const shake = f < 0.25 ? (Math.random() - 0.5) * 5 : 0;
+                ctx.font = "28px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText(flash || f > 0.5 ? "💣" : "🔥", holderP.x + shake, holderP.y - BOMB_R - 16 + shake);
+            }
+
+            if (countdown) {
+                ctx.fillStyle = "#f1c40f"; ctx.font = "bold 90px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.shadowColor = "#f39c12"; ctx.shadowBlur = 25;
+                ctx.fillText(Math.ceil((120 - bombFrame) / 40), BOMB_W / 2, BOMB_H / 2);
+                ctx.shadowBlur = 0;
+            }
+
+            if (bombOver) {
+                bombBoom++;
+                ctx.font = Math.min(260, 40 + bombBoom * 5) + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText("💥", holderP.x, holderP.y);
+                if (bombBoom === 90) {
+                    clearInterval(gameInterval);
+                    if (bombHolder === 1) s2++; else s1++; // اللي القنبلة معاه يخسر
+                    checkRound();
+                }
+            }
+        }
+
+        function ball3(c, x, y, rx, ry, l, d) {
+            c.save(); c.translate(x, y); c.scale(1, ry / rx);
+            const g = c.createRadialGradient(-rx * 0.3, -rx * 0.35, rx * 0.1, 0, 0, rx); g.addColorStop(0, l); g.addColorStop(1, d);
+            c.fillStyle = g; c.beginPath(); c.arc(0, 0, rx, 0, Math.PI * 2); c.fill(); c.restore();
+        }
+        function sumo3D(c, x, gy, belt, beltD, f, sc, al, shake) {
+            c.save(); c.globalAlpha = al; c.translate(x + (shake ? (Math.random() - 0.5) * shake : 0), gy); c.scale(sc * f * 1.15, sc * 1.15);
+            const K = ['#ffd9b0', '#c98450'];
+            c.fillStyle = "rgba(0,0,0,0.35)"; c.beginPath(); c.ellipse(0, 2, 42, 10, 0, 0, Math.PI * 2); c.fill();
+            ball3(c, -16, -14, 11, 18, ...K); ball3(c, 16, -14, 11, 18, ...K);
+            ball3(c, -12, -2, 14, 6, '#e6aa77', '#a8683a'); ball3(c, 22, -2, 14, 6, '#e6aa77', '#a8683a');
+            ball3(c, -27, -54, 10, 10, ...K);
+            ball3(c, 0, -50, 36, 34, ...K);
+            ball3(c, -34, -34, 8, 8, belt, beltD); ball3(c, 0, -34, 37, 13, belt, beltD);
+            ball3(c, 30 + (shake ? 6 : 0), -58, 11, 11, ...K);
+            ball3(c, 10, -88, 17, 17, '#ffe3c2', '#d09560');
+            c.fillStyle = "#161616"; c.beginPath(); c.ellipse(10, -94, 17, 11, 0, Math.PI, 0); c.fill();
+            ball3(c, 3, -110, 7, 5, '#555', '#000');
+            c.fillStyle = "#fff"; c.beginPath(); c.arc(18, -89, 3.4, 0, 7); c.arc(27, -89, 3.4, 0, 7); c.fill();
+            c.fillStyle = "#000"; c.beginPath(); c.arc(19, -89, 1.7, 0, 7); c.arc(28, -89, 1.7, 0, 7); c.fill();
+            c.strokeStyle = "#111"; c.lineWidth = 2; c.beginPath(); c.moveTo(13, -96); c.lineTo(20, -92); c.moveTo(23, -92); c.lineTo(30, -96); c.stroke();
+            c.beginPath(); c.arc(23, -80, 4, 0.2, Math.PI - 0.2); c.stroke();
+            c.restore();
+        }
+
+        // --- لعبة 9: السومو 🥋 ---
+        const SUMO_R = 185, SUMO_BR = 30, SUMO_LIM = 118, SUMO_STEP = 6;
+        let SMH = 400, sumoOut = 0, sumoOff = 0, sumoShow = 0, sumoFrame = 0, sumoWinner = 0, sumoEnd = 0, sumoShake = [0, 0];
+
+        function initSumo() {
+            sumoOut = 0;
+            SMH = fitCanvas('sumoCanvas');
+            sumoOff = 0; sumoShow = 0; sumoFrame = 0; sumoWinner = 0; sumoEnd = 0; sumoShake = [0, 0];
+            gameInterval = setInterval(updateSumo, 1000 / 60);
+        }
+
+        function tapSumo(p) {
+            if (sumoFrame < 150 || sumoWinner) return;
+            if (p === 2 && isCPUMode) return;
+            sumoPush(p);
+        }
+
+        function sumoPush(p) {
+            if (sumoWinner) return;
+            if (p === 1) { sumoOff -= SUMO_STEP; sumoShake[0] = 6; }
+            else { sumoOff += SUMO_STEP; sumoShake[1] = 6; }
+            if (sumoOff <= -SUMO_LIM) { sumoWinner = 1; sumoOff = -SUMO_LIM; }
+            else if (sumoOff >= SUMO_LIM) { sumoWinner = 2; sumoOff = SUMO_LIM; }
+        }
+
+        function drawSumoWrestler(ctx, x, y, belt, dir, scale, alpha, shake) {
+            const T = Math.PI * 2, R = SUMO_BR, ln = "#1f2937";
+            const disc = (px, py, r, a, b) => { const g = ctx.createRadialGradient(px - r * 0.3, py - r * 0.3, r * 0.1, px, py, r); g.addColorStop(0, a); g.addColorStop(1, b); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, r, 0, T); ctx.fill(); };
+            ctx.save(); ctx.globalAlpha = alpha;
+            ctx.translate(x + (shake ? (Math.random() - 0.5) * shake : 0), y); ctx.scale(scale, scale);
+            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(4, 7, R, R * 0.9, 0, 0, T); ctx.fill();
+            ctx.lineWidth = 2.5; ctx.strokeStyle = ln;
+            disc(-R + 2, dir * 10, 9, "#ffe3c2", "#c98450"); ctx.stroke(); disc(R - 2, dir * 10, 9, "#ffe3c2", "#c98450"); ctx.stroke();
+            disc(0, 0, R, "#ffe3c2", "#c98450"); ctx.beginPath(); ctx.arc(0, 0, R, 0, T); ctx.stroke();
+            ctx.lineWidth = 9; ctx.strokeStyle = belt; ctx.beginPath(); ctx.arc(0, 0, R - 9, 0, T); ctx.stroke();
+            ctx.lineWidth = 2.5; ctx.strokeStyle = ln; disc(0, dir * -6, 5, "#555", "#000");
+            disc(0, dir * 8, 15, "#fff0dc", "#d09560"); ctx.beginPath(); ctx.arc(0, dir * 8, 15, 0, T); ctx.stroke();
+            ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(0, dir * 8, 15, dir > 0 ? Math.PI : 0, dir > 0 ? T : Math.PI); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-5, dir * 12, 3.2, 0, T); ctx.arc(5, dir * 12, 3.2, 0, T); ctx.fill();
+            ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(-5, dir * 12.5, 1.5, 0, T); ctx.arc(5, dir * 12.5, 1.5, 0, T); ctx.fill();
+            ctx.lineWidth = 2; ctx.strokeStyle = "#111"; ctx.beginPath(); ctx.moveTo(-9, dir * 8); ctx.lineTo(-3, dir * 10); ctx.moveTo(9, dir * 8); ctx.lineTo(3, dir * 10); ctx.stroke();
+            ctx.restore();
+        }
+
+        function updateSumo() {
+            const ctx = document.getElementById('sumoCanvas').getContext('2d');
+            ctx.clearRect(0, 0, 400, SMH);
+            ctx.direction = "ltr";
+            sumoFrame++;
+            const countdown = sumoFrame < 150;
+
+            if (isCPUMode && !countdown && !sumoWinner) {
+                const rate = 4.6 + 1.6 * Math.sin(sumoFrame / 55) + (sumoOff < -50 ? 1.2 : 0);
+                if (Math.random() < rate / 60) sumoPush(2);
+            }
+            sumoShow += (sumoOff - sumoShow) * 0.35;
+            if (sumoShake[0] > 0) sumoShake[0]--;
+            if (sumoShake[1] > 0) sumoShake[1]--;
+
+            const cy = SMH / 2;
+            const bg = ctx.createLinearGradient(0, 0, 0, SMH); bg.addColorStop(0, "#1e1b4b"); bg.addColorStop(1, "#4c1d95");
+            ctx.fillStyle = bg; ctx.fillRect(0, 0, 400, SMH);
+            ctx.fillStyle = "#6b3f17"; ctx.beginPath(); ctx.arc(200, cy + 9, SUMO_R + 8, 0, Math.PI * 2); ctx.fill();
+            const sg = ctx.createRadialGradient(200, cy - 30, 10, 200, cy, SUMO_R); sg.addColorStop(0, "#f1d9a6"); sg.addColorStop(1, "#c9a46a");
+            ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(200, cy, SUMO_R, 0, Math.PI * 2); ctx.fill();
+            ctx.lineWidth = 10; ctx.strokeStyle = "#92400e"; ctx.stroke();
+            ctx.setLineDash([14, 8]); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            ctx.beginPath(); ctx.arc(200, cy, SUMO_R - 16, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = "#fff"; ctx.fillRect(170, cy - 14, 24, 4); ctx.fillRect(206, cy - 14, 24, 4); ctx.fillRect(170, cy + 10, 24, 4); ctx.fillRect(206, cy + 10, 24, 4);
+
+            let sc1 = 1, sc2 = 1, al1 = 1, al2 = 1;
+            if (sumoWinner) {
+                sumoEnd++; sumoOut = Math.min(110, sumoEnd * 3);
+                const fall = Math.min(1, Math.max(0, (sumoEnd - 10) / 40));
+                if (sumoWinner === 1) { sc2 = 1 - 0.5 * fall; al2 = 1 - 0.8 * fall; }
+                else { sc1 = 1 - 0.5 * fall; al1 = 1 - 0.8 * fall; }
+            }
+            drawSumoWrestler(ctx, 200, cy + (sumoShow - SUMO_BR) * 1.25 - (sumoWinner === 1 ? sumoOut * 1.25 : 0), "#2563eb", 1, sc2 * 1.25, al2, sumoShake[1]);
+            drawSumoWrestler(ctx, 200, cy + (sumoShow + SUMO_BR) * 1.25 + (sumoWinner === 2 ? sumoOut * 1.25 : 0), "#dc2626", -1, sc1 * 1.25, al1, sumoShake[0]);
+
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            if (countdown) {
+                ctx.fillStyle = "#fff"; ctx.font = "bold 90px sans-serif";
+                ctx.shadowColor = "#000"; ctx.shadowBlur = 20;
+                ctx.fillText(Math.ceil((150 - sumoFrame) / 50), 200, SMH / 2);
+                ctx.shadowBlur = 0;
+            } else if (sumoFrame < 190) {
+                ctx.fillStyle = "#fff"; ctx.font = "bold 60px sans-serif"; ctx.shadowColor = "#000"; ctx.shadowBlur = 20;
+                ctx.fillText("GO!", 200, SMH / 2); ctx.shadowBlur = 0;
+            }
+            if (sumoWinner) {
+                ctx.font = "50px sans-serif";
+                ctx.fillText("🏆", 200, sumoWinner === 1 ? SMH - 80 : 80);
+                if (sumoEnd === 70) {
+                    clearInterval(gameInterval);
+                    if (sumoWinner === 1) s1++; else s2++;
+                    checkRound();
+                }
+            }
+        }
+
+        // --- لعبة 10: الفراخ 🐔 ---
+        let CH_W = 400, CH_H = 440, CH_LANE = 220, CH_FLOOR = 190; const CH_X = 60, CH_VY = 11.5, CH_G = 0.75;
+        function chPtr(e) { const r = e.currentTarget.getBoundingClientRect(); chickenJump(e.clientY - r.top > r.height / 2 ? 1 : 2); }
+        const CH_TYPES = [{ t: 'fence', w: 26, h: 36 }, { t: 'rock', w: 30, h: 26 }, { t: 'hay', w: 36, h: 40 }];
+        let chY = [0, 0], chVY = [0, 0], chObs = [], chSpeed = 4.6, chFrame = 0, chDist = 0, chAcc = 0, chGap = 300;
+        let chCrash = [false, false], chOver = false;
+
+        function initChicken() {
+            CH_H = fitCanvas('chickenCanvas'); CH_LANE = CH_H / 2; CH_FLOOR = CH_LANE - 30;
+            chY = [0, 0]; chVY = [0, 0]; chObs = []; chSpeed = 4.6; chFrame = 0; chDist = 0;
+            chAcc = 200; chGap = 300; chCrash = [false, false]; chOver = false;
+            gameInterval = setInterval(updateChicken, 1000 / 60);
+        }
+
+        function chJump(i) {
+            if (chFrame < 150 || chOver) return;
+            if (chY[i] === 0 && chVY[i] === 0) chVY[i] = CH_VY;
+        }
+        function chickenJump(p) {
+            if (p === 2 && isCPUMode) return;
+            chJump(p - 1);
+        }
+
+        function spawnChObs() {
+            let type;
+            if (chFrame > 600 && Math.random() < 0.22) type = { t: 'rocks', w: 58, h: 26 };
+            else type = CH_TYPES[Math.floor(Math.random() * CH_TYPES.length)];
+            chObs.push({ x: CH_W + 10, t: type.t, w: type.w, h: type.h });
+        }
+
+        function cpuChickenThink() {
+            if (chY[1] !== 0 || chVY[1] !== 0) return;
+            const o = chObs.find(o => o.x + o.w - 3 > CH_X + 6);
+            if (!o) return;
+            if (o.ignore === undefined) { o.ignore = Math.random() < 0.05; o.err = (Math.random() * 2 - 1) * 3; }
+            if (o.ignore) return;
+            const sq = Math.sqrt(Math.max(0, CH_VY * CH_VY - 2 * CH_G * o.h));
+            const t1 = (CH_VY - sq) / CH_G, t2 = (CH_VY + sq) / CH_G;
+            const tEnter = (o.x + 3 - (CH_X + 30)) / chSpeed, tExit = (o.x + o.w - 3 - (CH_X + 6)) / chSpeed;
+            const tMid = ((tEnter - t1) + (tExit - t2)) / 2;
+            if (tMid + o.err <= 0 && tEnter > 0) chJump(1);
+        }
+
+        function drawChObstacle(ctx, o, gy) {
+            ctx.save();
+            if (o.t === 'fence') {
+                ctx.fillStyle = "#a16207";
+                ctx.fillRect(o.x, gy - o.h, 6, o.h); ctx.fillRect(o.x + o.w - 6, gy - o.h, 6, o.h);
+                ctx.fillStyle = "#ca8a04";
+                ctx.fillRect(o.x, gy - o.h + 8, o.w, 5); ctx.fillRect(o.x, gy - o.h + 20, o.w, 5);
+            } else if (o.t === 'hay') {
+                ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.roundRect(o.x, gy - o.h, o.w, o.h, 9); ctx.fill();
+                ctx.strokeStyle = "#a16207"; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(o.x + 6, gy - o.h + 10); ctx.lineTo(o.x + o.w - 6, gy - o.h + 10);
+                ctx.moveTo(o.x + 6, gy - o.h / 2 + 4); ctx.lineTo(o.x + o.w - 6, gy - o.h / 2 + 4); ctx.stroke();
+            } else {
+                const rocks = o.t === 'rocks' ? [[o.x, 26], [o.x + 32, 26]] : [[o.x, o.w]];
+                rocks.forEach(([rx, rw]) => {
+                    ctx.fillStyle = "#9ca3af"; ctx.beginPath(); ctx.ellipse(rx + rw / 2, gy, rw / 2, o.h, 0, Math.PI, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.ellipse(rx + rw / 2 - 4, gy - o.h / 2, 4, 6, 0, 0, Math.PI * 2); ctx.fill();
+                });
+            }
+            ctx.restore();
+        }
+
+        function updateChicken() {
+            const ctx = document.getElementById('chickenCanvas').getContext('2d');
+            ctx.clearRect(0, 0, CH_W, CH_H);
+            ctx.direction = "ltr";
+            chFrame++;
+            const countdown = chFrame < 150;
+
+            if (!countdown && !chOver) {
+                chSpeed = Math.min(10, chSpeed + 0.0025);
+                chDist += chSpeed; chAcc += chSpeed;
+                if (chAcc >= chGap) { spawnChObs(); chAcc = 0; chGap = 240 + Math.random() * 200 + chSpeed * 22; }
+                chObs.forEach(o => o.x -= chSpeed);
+                chObs = chObs.filter(o => o.x + o.w > -10);
+                if (isCPUMode) cpuChickenThink();
+                for (let i = 0; i < 2; i++) {
+                    if (chVY[i] !== 0 || chY[i] > 0) {
+                        chY[i] += chVY[i]; chVY[i] -= CH_G;
+                        if (chY[i] <= 0) { chY[i] = 0; chVY[i] = 0; }
+                    }
+                    chCrash[i] = chObs.some(o => o.x + 3 < CH_X + 30 && o.x + o.w - 3 > CH_X + 6 && chY[i] < o.h - 4);
+                }
+            }
+
+            [0, 1].forEach(i => { // 0 = P1 (الحارة اللي تحت) ، 1 = P2 (الحارة اللي فوق)
+                const oy = i === 0 ? CH_LANE : 0, gy = oy + CH_FLOOR;
+                const g = ctx.createLinearGradient(0, oy, 0, gy);
+                g.addColorStop(0, "#2a9fc9"); g.addColorStop(1, "#7dd3fc");
+                ctx.fillStyle = g; ctx.fillRect(0, oy, CH_W, CH_FLOOR);
+                ctx.fillStyle = "#4d7c0f"; ctx.fillRect(0, gy, CH_W, 10);
+                ctx.fillStyle = "#78350f"; ctx.fillRect(0, gy + 10, CH_W, CH_LANE - CH_FLOOR - 10);
+                ctx.fillStyle = "#65a30d";
+                for (let x = -(chDist % 50); x < CH_W; x += 50) ctx.fillRect(x, gy - 4, 3, 4);
+                ctx.fillStyle = "#92400e";
+                for (let x = -(chDist % 70); x < CH_W; x += 70) ctx.fillRect(x + 20, gy + 18, 8, 4);
+
+                chObs.forEach(o => drawChObstacle(ctx, o, gy));
+
+                const cx = CH_X + 18, sh = Math.max(0.4, 1 - chY[i] / 120);
+                ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(cx, gy + 3, 16 * sh, 4 * sh, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.save();
+                ctx.translate(cx, gy - chY[i] - (chY[i] === 0 && !chOver && !countdown ? Math.abs(Math.sin(chFrame * 0.45)) * 3 : 0));
+                ctx.rotate(chY[i] > 0 ? -0.25 : 0);
+                drawChick(ctx, chCrash[i]);
+                ctx.restore();
+                if (chCrash[i]) { ctx.font = "40px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("💥", cx + 12, gy - chY[i] - 22); }
+
+                ctx.fillStyle = i === 0 ? "#fca5a5" : "#93c5fd"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+                ctx.fillText(i === 0 ? "P1" : (isCPUMode ? "🤖" : "P2"), 10, oy + 16);
+            });
+
+            ctx.fillStyle = "#f1c40f"; ctx.fillRect(0, CH_LANE - 2, CH_W, 4);
+            if (countdown) {
+                ctx.fillStyle = "#f1c40f"; ctx.font = "bold 90px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.shadowColor = "#f39c12"; ctx.shadowBlur = 25;
+                ctx.fillText(Math.ceil((150 - chFrame) / 50), CH_W / 2, CH_H / 2);
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.beginPath(); ctx.roundRect(CH_W / 2 - 45, CH_LANE - 13, 90, 26, 8); ctx.fill();
+                ctx.fillStyle = "#f1c40f"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText("🏁 " + Math.floor(chDist / 10), CH_W / 2, CH_LANE);
+            }
+
+            if (!chOver && (chCrash[0] || chCrash[1])) {
+                chOver = true;
+                clearInterval(gameInterval);
+                if (chCrash[0] && !chCrash[1]) s2++;
+                else if (chCrash[1] && !chCrash[0]) s1++;
+                setTimeout(checkRound, 1000);
+            }
+        }
+
+
+        // --- رسم الفرخة ---
+        function drawChick(c, crash) {
+            c.fillStyle = "#f97316"; c.fillRect(-10, -6, 4, 8); c.fillRect(6, -6, 4, 8); c.fillRect(-13, 0, 9, 3); c.fillRect(4, 0, 9, 3);
+            c.fillStyle = "#fff"; c.strokeStyle = "#94a3b8"; c.lineWidth = 2;
+            c.beginPath(); c.roundRect(-18, -42, 36, 38, 9); c.fill(); c.stroke();
+            c.fillStyle = "#dc2626"; c.beginPath(); c.roundRect(-10, -53, 8, 13, 3); c.roundRect(0, -51, 8, 11, 3); c.fill();
+            c.fillStyle = "#f97316"; c.beginPath(); c.moveTo(16, -30); c.lineTo(28, -26); c.lineTo(16, -21); c.closePath(); c.fill();
+            c.fillStyle = "#dc2626"; c.fillRect(15, -21, 4, 5);
+            c.strokeStyle = "#111"; c.fillStyle = "#111"; c.lineWidth = 2;
+            if (crash) { c.beginPath(); c.moveTo(4, -36); c.lineTo(11, -29); c.moveTo(11, -36); c.lineTo(4, -29); c.stroke(); }
+            else { c.beginPath(); c.arc(8, -32, 3, 0, Math.PI * 2); c.fill(); }
+        }
+
+        // --- لعبة 11: الدبابات 🪖 (دبابة لكل لاعب) ---
+        let TKW = 400, TKH = 700, tk = [], tkB = [], tkKeys = [], tkFrame = 0, tkOver = false, tkWalls = [];
+
+        function initTank() {
+            TKH = fitCanvas('tankCanvas'); const H = TKH;
+            tkWalls = [[160, H / 2 - 8, 80, 16], [50, H / 2 - 70, 16, 140], [334, H / 2 - 70, 16, 140], [120, H / 2 - 170, 16, 70], [264, H / 2 - 170, 16, 70], [120, H / 2 + 100, 16, 70], [264, H / 2 + 100, 16, 70]];
+            const mk = (x, y, a, bot) => ({ x, y, a, bot, cd: 0, hp: 2, flash: 0, ph: 0, side: 1 });
+            tk = [mk(200, H - 60, -Math.PI / 2, false), mk(200, 60, Math.PI / 2, isCPUMode)];
+            tkB = []; tkKeys = [{}, {}]; tkFrame = 0; tkOver = false;
+            const el = document.getElementById('tank-ctrls'); el.innerHTML = '';
+            [0, 1].forEach(i => {
+                if (tk[i].bot) return;
+                const col = i ? '#2563eb' : '#16a34a', pos = i ? 'top:58px;right:8px' : 'bottom:12px;left:8px';
+                const dp = document.createElement('div'); dp.className = 'dpad-container tk-dp'; dp.style.cssText = pos;
+                dp.innerHTML = [['UP', 'up', '🔼'], ['DOWN', 'down', '🔽'], ['LEFT', 'left', '◀️'], ['RIGHT', 'right', '▶️']].map(d => `<button class="dpad-btn dpad-${d[1]}" style="background:${col}" data-d="${d[0]}">${d[2]}</button>`).join('') + '<div class="dpad-center"></div>';
+                dp.querySelectorAll('button').forEach(b => {
+                    const dd = b.dataset.d;
+                    b.onpointerdown = ev => { ev.preventDefault(); tankSet(i, dd, true); };
+                    b.onpointerup = b.onpointerleave = b.onpointercancel = () => tankSet(i, dd, false);
+                });
+                el.appendChild(dp);
+                const fb = document.createElement('button'); fb.className = 'tk-fb'; fb.textContent = '🔥';
+                fb.style.cssText = i ? 'top:78px;left:14px' : 'bottom:34px;right:14px';
+                fb.onpointerdown = ev => { ev.preventDefault(); tankFire(i); };
+                el.appendChild(fb);
+            });
+            gameInterval = setInterval(updateTank, 1000 / 60);
+        }
+        function tankSet(i, d, on) { if (tk[i] && !tk[i].bot) tkKeys[i][d] = on; }
+        function tankFire(i) {
+            const t = tk[i];
+            if (!t || tkFrame < 120 || tkOver || t.cd > 0 || t.hp <= 0) return;
+            t.cd = 30;
+            tkB.push({ x: t.x + Math.cos(t.a) * 26, y: t.y + Math.sin(t.a) * 26, vx: Math.cos(t.a) * 5.5, vy: Math.sin(t.a) * 5.5, o: i });
+        }
+        function tkWall(x, y, r) {
+            return x < r || y < r || x > TKW - r || y > TKH - r || tkWalls.some(w => x > w[0] - r && x < w[0] + w[2] + r && y > w[1] - r && y < w[1] + w[3] + r);
+        }
+        function drawTank(c, t, body, dark) {
+            c.save(); c.translate(t.x, t.y); c.rotate(t.a);
+            if (t.hp <= 0) { body = "#6b7280"; dark = "#374151"; }
+            c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.roundRect(-16, -9, 36, 30, 6); c.fill();
+            c.fillStyle = "#111827"; c.beginPath(); c.roundRect(-19, -17, 36, 8, 3); c.roundRect(-19, 9, 36, 8, 3); c.fill();
+            c.fillStyle = "#374151"; for (let k = -16; k < 16; k += 6) { c.fillRect(k, -17, 2, 8); c.fillRect(k, 9, 2, 8); }
+            const g = c.createLinearGradient(0, -11, 0, 11); g.addColorStop(0, body); g.addColorStop(1, dark);
+            c.fillStyle = g; c.beginPath(); c.roundRect(-17, -11, 34, 22, 6); c.fill();
+            c.fillStyle = dark; c.beginPath(); c.roundRect(2, -3.5, 26, 7, 2); c.fill(); c.fillStyle = "#111"; c.fillRect(26, -4.5, 4, 9);
+            c.fillStyle = body; c.beginPath(); c.arc(0, 0, 10, 0, Math.PI * 2); c.fill(); c.strokeStyle = dark; c.lineWidth = 2; c.stroke();
+            c.fillStyle = "rgba(255,255,255,0.4)"; c.beginPath(); c.arc(-3, -3, 3.5, 0, Math.PI * 2); c.fill();
+            if (t.flash > 0) { c.fillStyle = "rgba(255,255,255,0.7)"; c.beginPath(); c.roundRect(-17, -11, 34, 22, 6); c.fill(); }
+            c.restore();
+        }
+        function updateTank() {
+            const c = document.getElementById('tankCanvas').getContext('2d');
+            c.clearRect(0, 0, TKW, TKH); c.direction = "ltr";
+            tkFrame++;
+            const countdown = tkFrame < 120;
+            if (!countdown && !tkOver) {
+                tk.forEach((t, i) => {
+                    if (t.hp <= 0) return;
+                    if (t.cd > 0) t.cd--; if (t.flash > 0) t.flash--;
+                    const k = tkKeys[i];
+                    let dx = (k.RIGHT ? 1 : 0) - (k.LEFT ? 1 : 0), dy = (k.DOWN ? 1 : 0) - (k.UP ? 1 : 0);
+                    if (t.bot) {
+                        const o = tk[0], tx = o.x - t.x, ty = o.y - t.y, dist = Math.hypot(tx, ty) || 1;
+                        t.ph = (t.ph + 1) % 110;
+                        if (t.ph === 0) t.side = Math.random() < 0.5 ? 1 : -1;
+                        if (t.ph < 60) {
+                            if (dist > 170) { dx = tx / dist; dy = ty / dist; } else { dx = -ty / dist * t.side; dy = tx / dist * t.side; }
+                            if (tkWall(t.x + dx * 8, t.y + dy * 8, 17)) t.side *= -1;
+                        } else {
+                            dx = tx / dist; dy = ty / dist;
+                            let d = Math.atan2(ty, tx) - t.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+                            if (Math.abs(d) < 0.25 && Math.random() < 0.08) tankFire(i);
+                        }
+                    }
+                    if (dx || dy) {
+                        const m = Math.hypot(dx, dy); dx /= m; dy /= m;
+                        let d = Math.atan2(dy, dx) - t.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+                        t.a += Math.max(-0.25, Math.min(0.25, d));
+                        if (Math.abs(d) < 1.3) {
+                            const nx = t.x + dx * 1.9, ny = t.y + dy * 1.9;
+                            if (!tkWall(nx, t.y, 17)) t.x = nx; if (!tkWall(t.x, ny, 17)) t.y = ny;
+                        }
+                    }
+                });
+                tkB.forEach(b => {
+                    b.x += b.vx; b.y += b.vy;
+                    tk.forEach((t, i) => { if (i !== b.o && t.hp > 0 && Math.hypot(t.x - b.x, t.y - b.y) < 18) { t.hp--; t.flash = 8; b.dead = true; } });
+                    if (tkWall(b.x, b.y, 2)) b.dead = true;
+                });
+                tkB = tkB.filter(b => !b.dead);
+                if (tk[0].hp <= 0 || tk[1].hp <= 0) {
+                    tkOver = true; clearInterval(gameInterval);
+                    if (tk[0].hp <= 0 && tk[1].hp > 0) s2++; else if (tk[1].hp <= 0 && tk[0].hp > 0) s1++;
+                    setTimeout(checkRound, 1200);
+                }
+            }
+            for (let y = 0; y < TKH; y += 50) { c.fillStyle = (y / 50) % 2 ? "#4d7c0f" : "#558b12"; c.fillRect(0, y, TKW, 50); }
+            c.strokeStyle = "rgba(255,255,255,0.25)"; c.setLineDash([12, 10]); c.lineWidth = 3; c.beginPath(); c.moveTo(0, TKH / 2); c.lineTo(TKW, TKH / 2); c.stroke(); c.setLineDash([]);
+            tkWalls.forEach(w => {
+                c.fillStyle = "rgba(0,0,0,0.3)"; c.fillRect(w[0] + 4, w[1] + 5, w[2], w[3]);
+                c.fillStyle = "#78350f"; c.beginPath(); c.roundRect(w[0], w[1], w[2], w[3], 3); c.fill();
+                c.fillStyle = "#b4690e"; c.beginPath(); c.roundRect(w[0] + 2, w[1] + 2, w[2] - 4, w[3] - 6, 2); c.fill();
+            });
+            drawTank(c, tk[0], "#4ade80", "#15803d"); drawTank(c, tk[1], "#fb923c", "#c2410c");
+            c.fillStyle = "#fde047"; c.shadowColor = "#f59e0b"; c.shadowBlur = 8; tkB.forEach(b => { c.beginPath(); c.arc(b.x, b.y, 4, 0, Math.PI * 2); c.fill(); }); c.shadowBlur = 0;
+            c.textAlign = "center"; c.textBaseline = "middle";
+            tk.forEach((t, i) => {
+                if (t.hp <= 0) { c.font = "34px sans-serif"; c.fillText("💥", t.x, t.y); return; }
+                c.font = "bold 11px sans-serif"; c.fillStyle = "#fff"; c.fillText((t.bot ? "🤖" : "P" + (i + 1)) + " " + "❤️".repeat(t.hp), t.x, t.y - 26);
+            });
+            if (countdown) {
+                c.fillStyle = "#f1c40f"; c.font = "bold 90px sans-serif"; c.shadowColor = "#f39c12"; c.shadowBlur = 25;
+                c.fillText(Math.ceil((120 - tkFrame) / 40), TKW / 2, TKH / 2); c.shadowBlur = 0;
+            }
+        }
+
+                // --- لعبة 12: برج السوشي 🍣 (الي يوقع البرج يخسر) ---
+        const SU_W = 76, SU_HT = 26, SU_TYPES = [["#fb923c", "#fdba74"], ["#ef4444", "#fca5a5"], ["#facc15", "#fde68a"], ["#f472b6", "#fbcfe8"]];
+        let SUH = 700, suP = [], suCur = null, suTurn = 1, suState = 'play', suFrame = 0, suSp = 2.2, suCam = 0, suEndF = 0;
+
+        function suGY() { return SUH - 110; }
+        function initSushi() {
+            SUH = fitCanvas('sushiCanvas'); suP = []; suTurn = (subRound % 2) ? 1 : 2; suState = 'play'; suFrame = 0; suEndF = 0; suCam = 0;
+            newSuPiece(); gameInterval = setInterval(updateSushi, 1000 / 60);
+        }
+        function newSuPiece() {
+            suSp = 2.2 + Math.min(suP.length, 14) * 0.28;
+            suCur = { x: 60 + Math.random() * 280, dir: Math.random() < 0.5 ? 1 : -1, t: Math.floor(Math.random() * 4), y: null, vy: 0, wait: 25 + Math.random() * 40, tol: 6 + Math.random() * 12 };
+        }
+        function tapSushi(p) {
+            if (suState !== 'play' || !suCur || suCur.y !== null || p !== suTurn || (isCPUMode && p === 2)) return;
+            suDrop();
+        }
+        function suDrop() { suCur.y = suGY() - SU_HT * suP.length - 130; suCur.vy = 1; }
+        function sushiPtr(e) { tapSushi(suTurn); }
+        function suStable() {
+            const n = suP.length;
+            for (let k = -1; k < n - 1; k++) {
+                const lo = k < 0 ? 125 : suP[k].x - SU_W / 2, hi = k < 0 ? 275 : suP[k].x + SU_W / 2;
+                const above = suP.slice(k + 1), com = above.reduce((a, p) => a + p.x, 0) / above.length;
+                if (com < lo || com > hi) return false;
+            }
+            return true;
+        }
+        function drawNigiri(c, x, y, t, rot, sc) {
+            c.save(); c.translate(x, y + SU_HT / 2); c.rotate(rot || 0);
+            const w = SU_W, h = SU_HT;
+            const rg = c.createLinearGradient(0, -h / 2, 0, h / 2); rg.addColorStop(0, "#fff"); rg.addColorStop(1, "#d1d5db");
+            c.fillStyle = rg; c.beginPath(); c.roundRect(-w / 2 + 3, -h / 2 + 8, w - 6, h - 8, 8); c.fill();
+            const tg = c.createLinearGradient(0, -h / 2, 0, h / 2 - 8); tg.addColorStop(0, SU_TYPES[t][1]); tg.addColorStop(1, SU_TYPES[t][0]);
+            c.fillStyle = tg; c.beginPath(); c.roundRect(-w / 2, -h / 2, w, h - 8, 9); c.fill();
+            c.strokeStyle = "rgba(255,255,255,0.5)"; c.lineWidth = 2; c.beginPath();
+            if (t === 2) { c.fillStyle = "#14532d"; c.fillRect(-6, -h / 2, 12, h); }
+            else for (let k = -24; k <= 24; k += 16) { c.moveTo(k - 4, -h / 2 + 4); c.lineTo(k + 4, h / 2 - 12); }
+            c.stroke();
+            c.fillStyle = "#111"; const er = sc ? 3.6 : 2.8;
+            c.beginPath(); c.ellipse(-9, -4, er, er + 1, 0, 0, 7); c.ellipse(9, -4, er, er + 1, 0, 0, 7); c.fill();
+            c.fillStyle = "#fff"; c.beginPath(); c.arc(-8, -5.5, 1.1, 0, 7); c.arc(10, -5.5, 1.1, 0, 7); c.fill();
+            c.fillStyle = "rgba(244,114,182,0.6)"; c.beginPath(); c.arc(-17, 0, 3, 0, 7); c.arc(17, 0, 3, 0, 7); c.fill();
+            if (t !== 2) { c.strokeStyle = "#111"; c.lineWidth = 1.6; c.beginPath(); if (sc) c.arc(0, 2.5, 2.4, 0, 7); else c.arc(0, -1, 3.2, 0.2, Math.PI - 0.2); c.stroke(); }
+            c.restore();
+        }
+        function updateSushi() {
+            const c = document.getElementById('sushiCanvas').getContext('2d'), W = 400, H = SUH, gy = suGY();
+            c.clearRect(0, 0, W, H); c.direction = "ltr"; suFrame++;
+            if (suState === 'play') {
+                if (suCur.y === null) {
+                    suCur.x += suSp * suCur.dir; if (suCur.x < 40 || suCur.x > 360) suCur.dir *= -1;
+                    if (isCPUMode && suTurn === 2 && suFrame > 60 && --suCur.wait < 0) {
+                        const tgt = suP.length ? suP[suP.length - 1].x : 200;
+                        if (Math.abs(suCur.x - tgt) < suCur.tol) suDrop();
+                    }
+                } else {
+                    suCur.vy += 0.9; suCur.y += suCur.vy;
+                    const land = gy - SU_HT * (suP.length + 1);
+                    if (suCur.y >= land) {
+                        suP.push({ x: suCur.x, t: suCur.t });
+                        if (suStable()) { suTurn = 3 - suTurn; newSuPiece(); }
+                        else {
+                            suState = 'fall'; suEndF = 0;
+                            const cx = suP.reduce((a, p) => a + p.x, 0) / suP.length;
+                            suP.forEach((p, i) => { p.vx = (p.x - cx) * 0.06 + (Math.random() - 0.5) * 2; p.vy = -2 - Math.random() * 3; p.r = 0; p.rv = (Math.random() - 0.5) * 0.1; p.y = land + SU_HT * (suP.length - 1 - i); });
+                            suP[suP.length - 1].y = land;
+                        }
+                    }
+                }
+            } else {
+                suEndF++;
+                suP.forEach(p => { p.x += p.vx; p.vy += 0.5; p.y += p.vy; p.r += p.rv; });
+                if (suEndF === 100) { clearInterval(gameInterval); suTurn === 1 ? s2++ : s1++; checkRound(); }
+            }
+            const topY = gy - SU_HT * suP.length, camT = suState === 'play' ? Math.max(0, 260 - topY) : suCam;
+            suCam += (camT - suCam) * 0.1;
+            const bg = c.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#fef3c7"); bg.addColorStop(1, "#fdba74"); c.fillStyle = bg; c.fillRect(0, 0, W, H);
+            c.save(); c.translate(0, suCam);
+            c.fillStyle = "#7c2d12"; c.fillRect(0, gy + 6, W, 400);
+            c.fillStyle = "rgba(0,0,0,0.25)"; c.beginPath(); c.ellipse(200, gy + 14, 85, 10, 0, 0, Math.PI * 2); c.fill();
+            const pg = c.createLinearGradient(0, gy, 0, gy + 14); pg.addColorStop(0, "#fff"); pg.addColorStop(1, "#cbd5e1");
+            c.fillStyle = pg; c.beginPath(); c.roundRect(115, gy, 170, 14, 7); c.fill();
+            suP.forEach((p, i) => {
+                if (suState === 'play') drawNigiri(c, p.x, gy - SU_HT * (i + 1), p.t, 0);
+                else drawNigiri(c, p.x, p.y, p.t, p.r, true);
+            });
+            if (suState === 'play' && suCur) {
+                const cy = suCur.y === null ? gy - SU_HT * suP.length - 130 : suCur.y;
+                if (suCur.y === null) { c.strokeStyle = "rgba(0,0,0,0.15)"; c.setLineDash([6, 6]); c.lineWidth = 2; c.beginPath(); c.moveTo(suCur.x, cy + SU_HT); c.lineTo(suCur.x, topY); c.stroke(); c.setLineDash([]); }
+                drawNigiri(c, suCur.x, cy, suCur.t, 0, suCur.y !== null);
+            }
+            c.restore();
+            c.textAlign = "center"; c.textBaseline = "middle"; c.font = "bold 18px sans-serif";
+            const lab = p => (p === 2 && isCPUMode ? "🤖" : "P" + p) + (suState === 'play' ? (suTurn === p ? (p === 2 && isCPUMode ? " بيفكر..." : " ← دورك! اضغط أي مكان") : " استنى") : "");
+            c.fillStyle = suTurn === 1 ? "#b91c1c" : "#92400e"; c.globalAlpha = suTurn === 1 ? 1 : 0.55; c.fillText(lab(1), 200, H - 30); c.globalAlpha = 1;
+            c.save(); c.translate(200, 36); c.rotate(Math.PI); c.fillStyle = suTurn === 2 ? "#1d4ed8" : "#92400e"; c.globalAlpha = suTurn === 2 ? 1 : 0.55; c.fillText(lab(2), 0, 0); c.restore();
+            c.fillStyle = "rgba(124,45,18,0.85)"; c.beginPath(); c.roundRect(318, 10, 72, 30, 15); c.fill(); c.font = "bold 17px sans-serif"; c.fillStyle = "#fff"; c.fillText("🍣 " + suP.length, 354, 26);
+            if (suState === 'fall' && suEndF > 15) { c.font = "bold 28px sans-serif"; c.fillStyle = "#16a34a"; c.fillText("💥 " + (suTurn === 1 ? (isCPUMode ? "🤖" : "P2") : "P1") + " كسب 🏆", 200, H / 2 + 40); }
+        }
+
+        // تحكم بالكيبورد: P1 = الأسهم ، P2 = WASD
+        const keyDirs = { ArrowUp:[1,'UP'], ArrowDown:[1,'DOWN'], ArrowLeft:[1,'LEFT'], ArrowRight:[1,'RIGHT'],
+                          w:[2,'UP'], s:[2,'DOWN'], a:[2,'LEFT'], d:[2,'RIGHT'] };
+        document.addEventListener('keydown', e => {
+            const k = keyDirs[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+            if (!k) return;
+            if (currentGame === 4) { e.preventDefault(); changeSnakeDir(k[0], k[1]); }
+            if (currentGame === 7 && !e.repeat && (k[1] === 'LEFT' || k[1] === 'RIGHT')) { e.preventDefault(); raceMove(k[0], k[1] === 'LEFT' ? -1 : 1); }
+            if (currentGame === 5 && (k[1] === 'UP' || k[1] === 'DOWN')) { e.preventDefault(); pongHold(k[0], k[1] === 'UP' ? -1 : 1); }
+            if (currentGame === 8) { e.preventDefault(); bombSet(k[0], k[1], true); }
+            if (currentGame === 9 && !e.repeat) { e.preventDefault(); tapSumo(k[0]); }
+            if (currentGame === 10 && !e.repeat && k[1] === 'UP') { e.preventDefault(); chickenJump(k[0]); }
+            if (currentGame === 11) { e.preventDefault(); tankSet(k[0] - 1, k[1], true); }
+            if (currentGame === 12 && !e.repeat) { e.preventDefault(); tapSushi(k[0]); }
+        });
+        document.addEventListener('keydown', e => { if (currentGame === 11 && !e.repeat && (e.key === ' ' || e.key === 'f')) { e.preventDefault(); tankFire(e.key === ' ' ? 0 : 1); } });
+        document.addEventListener('keyup', e => {
+            const k = keyDirs[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+            if (k && currentGame === 5 && (k[1] === 'UP' || k[1] === 'DOWN')) pongHold(k[0], 0);
+            if (k && currentGame === 8) bombSet(k[0], k[1], false);
+            if (k && currentGame === 11) tankSet(k[0] - 1, k[1], false);
+        });
+
+        function checkRound() {
+            if (ONL && ONL.role === 1 && (currentGame === 3 || currentGame >= 4)) ONL.send({t:"cr", s1, s2});
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            updateUI();
+            if (s1 === 2 || s2 === 2 || subRound === 3) {
+                let msg = s1 > s2 ? "فاز اللاعب 1! 🏆" : s1 < s2 ? (isCPUMode ? "فاز الكمبيوتر! 🤖" : "فاز اللاعب 2! 🏆") : "تعادل! 🤝";
+                document.getElementById('winner-msg').innerText = msg;
+                if (ONL) document.getElementById('winner-msg').innerText = s1 === s2 ? 'تعادل! 🤝' : ((s1 > s2 ? ONL.names[1] : ONL.names[2]) + ' فاز! 🏆');
+                document.getElementById('overlay').classList.remove('hidden');
+            } else {
+                subRound++;
+                showGameArea();
+            }
+        }
+
+        function handleNext(fromPeer) {
+            if (ONL && mode === "tournament" && ONLSEQ.indexOf(currentGame) < ONLSEQ.length - 1) {
+                if (ONL.role === 2 && fromPeer !== true) { document.getElementById('winner-msg').innerText = '⏳ بانتظار ' + ONL.names[1] + ' يبدأ اللعبة الجاية…'; return; }
+                if (ONL.role === 1) { rpsMine = rpsOpp = ''; ONL.send({t:'next'}); }
+            }
+            rpsMine = rpsOpp = '';
+            document.getElementById('overlay').classList.add('hidden');
+            let maxGames = mode === "tournament" ? (ONL ? 3 : 12) : 1;
+            if (mode === "tournament" && (ONL ? ONLSEQ.indexOf(currentGame) < ONLSEQ.length - 1 : currentGame < maxGames)) {
+                currentGame = ONL ? ONLSEQ[ONLSEQ.indexOf(currentGame) + 1] : currentGame + 1; s1 = 0; s2 = 0; subRound = 1; showGameArea();
+            } else { location.reload(); }
+        }
+    
+/* ===== الحسابات ===== */
+const DBK='kcg_db',SEED={user:'mohamedelsayed',pass:'mmohamed5',name:'المدير',role:'admin'},MEM={};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function db(){let d=null;try{d=JSON.parse(localStorage.getItem(DBK))}catch(e){try{d=JSON.parse(MEM[DBK])}catch(_){}}
+  if(!d||!Array.isArray(d.users))d={users:[]};if(!d.users.some(u=>u.user===SEED.user))d.users.unshift({...SEED});return d}
+function save(d){const v=JSON.stringify(d);try{localStorage.setItem(DBK,v)}catch(e){MEM[DBK]=v;note('⚠️ المتصفح بيمنع التخزين: الحسابات مؤقتة لحد ما تقفل الصفحة')}}
+function note(t){const e=document.getElementById('login-error');if(e)e.innerText=t}
+let ME=null,loginRole='player';
+function setRole(r){loginRole=r;['player','admin'].forEach(k=>document.getElementById('rt-'+k).classList.toggle('on',k===r));note('')}
+function login(){const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value,a=db().users.find(x=>x.user===u&&x.pass===p);
+  if(!a)return note('اسم المستخدم أو كلمة السر غلط');
+  if(a.role!==loginRole)return note(loginRole==='admin'?'الحساب ده مش أدمن':'ده حساب أدمن، اختار "أدمن"');
+  ME=a;sessionStorage.setItem('kcg_user',u);enter()}
+function logout(){sessionStorage.removeItem('kcg_user');location.reload()}
+function enter(){document.getElementById('login-screen').classList.add('hidden');
+  if(ME.role==='admin'){document.getElementById('admin-screen').classList.remove('hidden');renderAdmin()}
+  else{document.getElementById('me-name').innerText=ME.name||ME.user;showMenu();initPeer()}}
+function showMenu(){['online-screen','admin-screen','notif-screen'].forEach(i=>document.getElementById(i).classList.add('hidden'));document.getElementById('main-menu').classList.remove('hidden')}
+function renderAdmin(){const d=db();document.getElementById('a-users').innerHTML=d.users.map(u=>`<div class="urow"><span><b>${esc(u.name||u.user)}</b> <small>@${esc(u.user)} · ${u.role==='admin'?'أدمن':'لاعب'}</small></span>${u.user===SEED.user||u.user===ME.user?'<small>محمي</small>':`<button class="del" onclick="delUser('${esc(u.user)}',this)">🗑 حذف</button>`}</div>`).join('')}
+function createUser(){try{const g=i=>document.getElementById(i).value.trim(),d=db(),user=g('n-user'),pass=g('n-pass');
+  if(!/^[A-Za-z0-9_]{3,20}$/.test(user))return note2('اسم المستخدم: 3-20 حرف/رقم إنجليزي أو _ بدون مسافات');
+  if(pass.length<4)return note2('كلمة السر 4 خانات على الأقل');
+  if(d.users.some(u=>u.user.toLowerCase()===user.toLowerCase()))return note2('اسم المستخدم موجود بالفعل');
+  d.users.push({user,pass,name:g('n-name')||user,role:document.getElementById('n-role').value});save(d);['n-name','n-user','n-pass'].forEach(i=>document.getElementById(i).value='');renderAdmin();note2('✅ تم إنشاء الحساب وهو شغال فوراً')}catch(e){note2('خطأ: '+e.message)}}
+function note2(t){mbox(t,[['حسناً']])}
+function delUser(u,b){if(u===SEED.user||u===ME.user)return;if(b.dataset.s!=='1'){b.dataset.s='1';const o=b.textContent;b.textContent='اضغط للتأكيد ⚠️';setTimeout(()=>{b.dataset.s='';b.textContent=o},4000);return}
+  const d=db();d.users=d.users.filter(x=>x.user!==u);save(d);renderAdmin()}
+function exportAcc(){const t=JSON.stringify(db().users),e=document.getElementById('a-io');e.value=t;e.select();try{navigator.clipboard.writeText(t)}catch(_){}}
+function importAcc(){try{const a=JSON.parse(document.getElementById('a-io').value),d=db();let n=0;a.forEach(x=>{if(x&&x.user&&x.pass&&['player','admin'].includes(x.role)&&!d.users.some(u=>u.user===x.user)){d.users.push({user:String(x.user),pass:String(x.pass),name:String(x.name||x.user),role:x.role});n++}});save(d);renderAdmin();note2('تم استيراد '+n+' حساب')}catch(e){note2('الصيغة غير صحيحة')}}
+function mbox(t,btns){document.getElementById('mbox-t').innerText=t;const b=document.getElementById('mbox-b');b.innerHTML='';btns.forEach(x=>{const e=document.createElement('button');e.className='btn-small';e.textContent=x[0];e.onclick=()=>{hideMbox();x[1]&&x[1]()};b.appendChild(e)});document.getElementById('mbox').classList.remove('hidden')}
+function hideMbox(){document.getElementById('mbox').classList.add('hidden')}
+
+/* ===== اللعب أونلاين (PeerJS) ===== */
+const GN={0:'نظام البطولة 🏆',1:'حجرة ورقة مقص',2:'اكس او',3:'تحدي الضغط'};
+const PID=u=>'kcgame9x-'+String(u).toLowerCase();
+let peer=null,peerOK=false,ONL=null,out=null,rpsMine='',rpsOpp='';
+const setPS=t=>{const e=document.getElementById('peer-status');if(e)e.innerText=t};
+const ostat=t=>{document.getElementById('o-status').innerText=t};
+function initPeer(){if(typeof Peer==='undefined'){setPS('⚠️ مكتبة الأونلاين ما اتحملتش (افتح الصفحة من رابط https وتأكد من النت)');return}
+  peer=new Peer(PID(ME.user));
+  peer.on('open',()=>{peerOK=true;setPS('🟢 متصل أونلاين')});
+  peer.on('error',e=>{if(e.type==='unavailable-id')setPS('⚠️ الحساب ده مفتوح على جهاز آخر');else if(e.type!=='peer-unavailable')setPS('⚠️ '+e.type)});
+  peer.on('disconnected',()=>{peerOK=false;setPS('🔴 انقطع الاتصال');try{peer.reconnect()}catch(e){}});
+  peer.on('call',call=>{call.answer();call.on('stream',st=>{const v=ensureGv();v.srcObject=st;try{v.play()}catch(e){}})});
+  peer.on('connection',c=>{c.on('data',m=>onMsg(c,m));c.on('close',()=>oppLeft(c))})}
+let OL=[],inbox=[],notifFrom='main-menu',invId=0;
+const dn=(u,n)=>{const x=db().users.find(v=>String(v.user).toLowerCase()===String(u).toLowerCase());return (x&&x.name)||n||'لاعب'};
+function openOnline(){document.getElementById('main-menu').classList.add('hidden');document.getElementById('online-screen').classList.remove('hidden');
+  OL=db().users.filter(u=>u.role==='player'&&u.user!==ME.user);
+  document.getElementById('o-list').innerHTML=OL.length?OL.map((u,i)=>`<div class="urow"><span>👤 ${esc(u.name||'لاعب')}</span><button onclick="inviteIdx(${i})">📨 ادعُ</button></div>`).join(''):'<small>مفيش لاعبين تانيين لسه.</small>';
+  ostat(document.getElementById('peer-status').innerText);renderInbox()}
+function inviteIdx(i){const u=OL[i];if(u)invite(u.user,u.name)}
+function invite(u,name){u=(u||'').trim();name=name||dn(u);if(!u||u.toLowerCase()===ME.user.toLowerCase())return ostat('اختار لاعب آخر');
+  if(!peer||!peerOK)return ostat('⏳ '+document.getElementById('peer-status').innerText+' — استنى ثانيتين وجرب تاني');if(out||ONL)return;
+  const g=+document.getElementById('o-game').value,c=peer.connect(PID(u),{reliable:true});out={c,to:u,toName:name,g};ostat('جارٍ دعوة '+name+'…');
+  out.t1=setTimeout(()=>{if(out&&out.c===c){out=null;try{c.close()}catch(e){}ostat('⛔ '+name+' مش متصل دلوقتي (لازم يكون فاتح اللعبة وداخل بحسابه)')}},9000);
+  c.on('open',()=>{clearTimeout(out&&out.t1);if(out&&out.c===c){c.send({t:'invite',from:ME.user,n:ME.name||ME.user,g});ostat('⏳ بانتظار رد '+name+'…');out.t2=setTimeout(()=>{if(out&&out.c===c){out=null;try{c.close()}catch(e){}ostat('⌛ '+name+' ما ردش')}},120000)}});
+  c.on('data',m=>onMsg(c,m));c.on('close',()=>oppLeft(c))}
+/* ===== إشعارات الدعوات ===== */
+function toast(t){const e=document.getElementById('toast');e.innerText=t;e.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add('hidden'),4000);try{navigator.vibrate&&navigator.vibrate(200)}catch(_){}}
+function renderInbox(){const n=inbox.length;
+  document.querySelectorAll('.nbadge').forEach(b=>{b.innerText=n;b.classList.toggle('hidden',!n)});
+  const l=document.getElementById('inv-list');if(!l)return;
+  l.innerHTML=n?inbox.map(i=>`<div class="inv-row"><div class="who">📨 <b>${esc(i.name)}</b> بيدعوك للعب <b>${esc(GN[i.g]||'')}</b></div><div class="btns"><button class="acc" onclick="accInv(${i.id})">✅ قبول</button><button class="rej" onclick="rejInv(${i.id})">❌ رفض</button></div></div>`).join(''):'<small>مفيش دعوات جديدة 🎈</small>'}
+function openNotif(from){notifFrom=from||'main-menu';['main-menu','online-screen'].forEach(i=>document.getElementById(i).classList.add('hidden'));document.getElementById('notif-screen').classList.remove('hidden');renderInbox()}
+function closeNotif(){document.getElementById('notif-screen').classList.add('hidden');document.getElementById(notifFrom).classList.remove('hidden')}
+function accInv(id){const it=inbox.find(x=>x.id===id);if(!it||ONL)return;
+  inbox.forEach(x=>{if(x!==it){try{x.c.send({t:'decline'})}catch(e){}}});inbox=[];
+  ONL=mk(2,it.c,it.from,it.name);try{it.c.send({t:'accept'})}catch(e){}renderInbox()}
+function rejInv(id){const it=inbox.find(x=>x.id===id);if(!it)return;inbox=inbox.filter(x=>x!==it);renderInbox();
+  try{it.c.send({t:'decline'})}catch(e){}setTimeout(()=>{try{it.c.close()}catch(e){}},300)}
+function mk(role,conn,opp,oppName){const names={};names[role]=ME.name||ME.user;names[3-role]=oppName||dn(opp);return{role,conn,opp,names,send:o=>{try{conn.send(o)}catch(e){}}}}
+function onMsg(c,m){if(!m||!m.t)return;switch(m.t){
+  case 'invite':{if(ONL){try{c.send({t:'decline'})}catch(e){}return}
+    inbox=inbox.filter(x=>{if(x.from===m.from||x.c===c){if(x.c!==c){try{x.c.close()}catch(e){}}return false}return true});
+    const it={id:++invId,c,from:m.from,name:dn(m.from,m.n),g:m.g};inbox.push(it);renderInbox();toast('📨 '+it.name+' بعتلك دعوة للعب '+(GN[m.g]||''));break}
+  case 'accept':if(out&&out.c===c){clearTimeout(out.t1);clearTimeout(out.t2);const g=out.g;ONL=mk(1,c,out.to,out.toName);out=null;ONL.send({t:'start',g});startOnline(g)}break;
+  case 'decline':if(out&&out.c===c){clearTimeout(out.t1);clearTimeout(out.t2);ostat('❌ '+out.toName+' رفض أو مشغول');out=null;try{c.close()}catch(e){}}break;
+  case 'start':if(ONL&&ONL.conn===c)startOnline(m.g);break;
+  case 'rps':if(ONL&&ONL.conn===c){rpsOpp=m.m;rpsTry()}break;
+  case 'xo':if(ONL&&ONL.conn===c&&xoBoard[m.i]===''&&isXTurn===(ONL.role===2))makeMove(m.i);break;
+  case 'tap':if(ONL&&ONL.role===1&&ONL.conn===c){tapCore(2);ONL.send({t:'ts',h:tapHeight})}break;
+  case 'ts':if(ONL&&ONL.role===2){tapHeight=m.h;updateTapUI()}break;
+  case 'in':if(ONL&&ONL.role===1&&ONL.conn===c&&currentGame>=4&&ORIG[m.f]&&!(m.f==='tapSushi'&&suTurn!==2))ORIG[m.f](...m.a);break;
+  case 'next':if(ONL&&ONL.role===2&&ONL.conn===c)handleNext(true);break;
+  case 'cr':if(ONL&&ONL.role===2){s1=m.s1;s2=m.s2;checkRound()}break}}
+function oppLeft(c){const ix=inbox.findIndex(x=>x.c===c);if(ix>=0){inbox.splice(ix,1);renderInbox();return}
+  if(out&&out.c===c){clearTimeout(out.t1);clearTimeout(out.t2);out=null;return}
+  if(ONL&&ONL.conn===c){ONL=null;mbox('🚪 الخصم خرج من اللعبة',[['رجوع للقائمة',()=>location.reload()]])}}
+function startOnline(g){if(ONL.role===1)startStream();else guestLoop();hideMbox();document.getElementById('notif-screen').classList.add('hidden');rpsMine=rpsOpp='';document.getElementById('online-screen').classList.add('hidden');document.getElementById('overlay').classList.add('hidden');
+  startGame(g===0?'tournament':'single',false,g||1);document.getElementById('p2-name').innerText=ONL.names[2];const sc=document.querySelector('.score');if(sc&&sc.firstChild)sc.firstChild.textContent=ONL.names[1]+': ';
+  const b=document.getElementById('onl-badge');b.innerText='🌐 أنت '+(ONL.role===1?'اللاعب 1':'اللاعب 2')+' ('+ONL.names[ONL.role]+') ضد '+ONL.names[3-ONL.role];b.classList.remove('hidden')}
+const ONLSEQ=[1,2,3,4,5,7,8,9,10,12],CVN={4:'snakeCanvas',5:'pongCanvas',7:'raceCanvas',8:'bombCanvas',9:'sumoCanvas',10:'chickenCanvas',12:'sushiCanvas'};
+let gv=null,vcT=null,glOn=false;
+function ensureGv(){if(!gv){gv=document.createElement('video');gv.muted=true;gv.autoplay=true;gv.playsInline=true;gv.setAttribute('playsinline','');gv.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0';document.body.appendChild(gv)}return gv}
+function startStream(){const vc=document.createElement('canvas');vc._hq=1;vc.width=vc.height=640;const x=vc.getContext('2d');
+  clearInterval(vcT);vcT=setInterval(()=>{const c=document.getElementById(CVN[currentGame]);if(c&&c.width){try{x.drawImage(c,0,0,640,640)}catch(e){}}},33);
+  try{peer.call(PID(ONL.opp),vc.captureStream(30))}catch(e){}}
+function guestLoop(){ensureGv();if(glOn)return;glOn=true;(function f(){if(ONL&&ONL.role===2&&currentGame>=4&&gv.videoWidth){const c=document.getElementById(CVN[currentGame]);if(c){const x=c.getContext('2d');x.save();x.setTransform(1,0,0,1,0,0);try{x.drawImage(gv,0,0,c.width,c.height)}catch(e){}x.restore()}}requestAnimationFrame(f)})()}
+/* إدخال اللاعب 2 من بعيد: الضيف يبعت ضغطاته والمضيف بيشغّل اللعبة */
+const ORIG={};['changeSnakeDir','pongHold','raceMove','bombSet','tapSumo','chickenJump','tapSushi'].forEach(n=>{ORIG[n]=window[n];window[n]=function(...a){
+  if(!ONL||currentGame<4)return ORIG[n](...a);if(a[0]!==ONL.role)return;if(ONL.role===2){ONL.send({t:'in',f:n,a});return}return ORIG[n](...a)}});
+const _chPtr=window.chPtr,_suPtr=window.sushiPtr;
+window.chPtr=function(e){if(!ONL||currentGame<4)return _chPtr(e);ONL.role===2?ONL.send({t:'in',f:'chickenJump',a:[2]}):ORIG.chickenJump(1)};
+window.sushiPtr=function(e){if(!ONL||currentGame<4)return _suPtr(e);if(ONL.role===2)ONL.send({t:'in',f:'tapSushi',a:[2]});else if(suTurn===1)ORIG.tapSushi(1)};
+function onlRps(m){if(rpsMine)return;rpsMine=m;document.getElementById('rps-status').innerText='⏳ بانتظار الخصم…';ONL.send({t:'rps',m});rpsTry()}
+function rpsTry(){if(!rpsMine||!rpsOpp)return;const a=ONL.role===1?rpsMine:rpsOpp,b=ONL.role===1?rpsOpp:rpsMine;
+  if(a!==b){const win=(a == 'حجرة' && b == 'مقص') || (a == 'ورقة' && b == 'حجرة') || (a == 'مقص' && b == 'ورقة');win?s1++:s2++}
+  document.getElementById('rps-status').innerText=ONL.names[1]+': '+a+' | '+ONL.names[2]+': '+b;rpsMine=rpsOpp='';setTimeout(checkRound,1000)}
+function tap(p){if(ONL){if(p!==ONL.role)return;if(ONL.role===2){ONL.send({t:'tap'});return}}tapCore(p);if(ONL&&ONL.role===1)ONL.send({t:'ts',h:tapHeight})}
+
+if(sessionStorage.getItem('kcg_user')){const a=db().users.find(x=>x.user===sessionStorage.getItem('kcg_user'));if(a){ME=a;enter()}}
+</script>
+</body>
+</html>
